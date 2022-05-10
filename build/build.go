@@ -814,7 +814,21 @@ func Build(ctx context.Context, drivers []DriverInfo, opt map[string]Options, do
 
 							itpull := imagetools.New(imageopt)
 
-							dt, desc, err := itpull.Combine(ctx, names[0], descs)
+							ref, err := reference.ParseNormalizedNamed(names[0])
+							if err != nil {
+								return err
+							}
+							ref = reference.TagNameOnly(ref)
+
+							srcs := make([]*imagetools.Source, len(descs))
+							for i, desc := range descs {
+								srcs[i] = &imagetools.Source{
+									Desc: desc,
+									Ref:  ref,
+								}
+							}
+
+							dt, desc, err := itpull.Combine(ctx, srcs)
 							if err != nil {
 								return err
 							}

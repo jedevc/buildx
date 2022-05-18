@@ -78,9 +78,6 @@ func runCreate(dockerCli command.Cli, in createOptions, args []string) error {
 	if len(repos) == 0 {
 		return errors.Errorf("no repositories specified, please set a reference in tag or source")
 	}
-	if len(repos) > 1 {
-		return errors.Errorf("multiple repositories currently not supported, found %v", repos)
-	}
 
 	var defaultRepo *string
 	if len(repos) == 1 {
@@ -181,6 +178,10 @@ func runCreate(dockerCli command.Cli, in createOptions, args []string) error {
 	r = imagetools.New(imageopt)
 
 	for _, t := range tags {
+		if err := r.Copy(ctx, srcs, t); err != nil {
+			return err
+		}
+
 		if err := r.Push(ctx, t, desc, dt); err != nil {
 			return err
 		}

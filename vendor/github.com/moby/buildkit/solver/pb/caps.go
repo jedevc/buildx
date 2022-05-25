@@ -9,8 +9,10 @@ var Caps apicaps.CapList
 // considered immutable. After a capability is marked stable it should not be disabled.
 
 const (
-	CapSourceImage                apicaps.CapID = "source.image"
-	CapSourceImageResolveMode     apicaps.CapID = "source.image.resolvemode"
+	CapSourceImage            apicaps.CapID = "source.image"
+	CapSourceImageResolveMode apicaps.CapID = "source.image.resolvemode"
+	CapSourceImageLayerLimit  apicaps.CapID = "source.image.layerlimit"
+
 	CapSourceLocal                apicaps.CapID = "source.local"
 	CapSourceLocalUnique          apicaps.CapID = "source.local.unique"
 	CapSourceLocalSessionID       apicaps.CapID = "source.local.sessionid"
@@ -68,6 +70,7 @@ const (
 	CapMetaExportCache apicaps.CapID = "meta.exportcache"
 
 	CapRemoteCacheGHA apicaps.CapID = "cache.gha"
+	CapRemoteCacheS3  apicaps.CapID = "cache.s3"
 
 	CapMergeOp apicaps.CapID = "mergeop"
 	CapDiffOp  apicaps.CapID = "diffop"
@@ -82,6 +85,12 @@ func init() {
 
 	Caps.Init(apicaps.Cap{
 		ID:      CapSourceImageResolveMode,
+		Enabled: true,
+		Status:  apicaps.CapStatusExperimental,
+	})
+
+	Caps.Init(apicaps.Cap{
+		ID:      CapSourceImageLayerLimit,
 		Enabled: true,
 		Status:  apicaps.CapStatusExperimental,
 	})
@@ -380,6 +389,11 @@ func init() {
 
 	Caps.Init(apicaps.Cap{
 		ID:      CapRemoteCacheGHA,
+		Enabled: true,
+		Status:  apicaps.CapStatusExperimental,
+	})
+	Caps.Init(apicaps.Cap{
+		ID:      CapRemoteCacheS3,
 		Enabled: true,
 		Status:  apicaps.CapStatusExperimental,
 	})

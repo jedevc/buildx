@@ -40,12 +40,12 @@ func (*factory) Priority(ctx context.Context, endpoint string, api dockerclient.
 }
 
 func (f *factory) New(ctx context.Context, cfg driver.InitConfig) (driver.Driver, error) {
-	if len(cfg.Files) > 0 {
-		return nil, errors.Errorf("setting config file is not supported for remote driver")
-	}
-	if len(cfg.BuildkitFlags) > 0 {
-		return nil, errors.Errorf("setting buildkit flags is not supported for remote driver")
-	}
+	// if len(cfg.Files) > 0 {
+	// 	return nil, errors.Errorf("setting config file is not supported for remote driver")
+	// }
+	// if len(cfg.BuildkitFlags) > 0 {
+	// 	return nil, errors.Errorf("setting buildkit flags is not supported for remote driver")
+	// }
 
 	d := &Driver{
 		factory:    f,

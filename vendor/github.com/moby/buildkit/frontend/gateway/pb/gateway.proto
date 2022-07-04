@@ -80,14 +80,32 @@ message InputsResponse {
 
 message ResolveImageConfigRequest {
 	string Ref = 1;
-	pb.Platform Platform = 2;
+	pb.Platform PlatformDeprecated = 2;
+
 	string ResolveMode = 3;
 	string LogName = 4;
+	int32 ResolverType = 5;
+	string SessionID = 6;
+	
+	message ConfigType {
+		pb.Platform Platform = 1;
+	}
+	message ManifestType {
+		pb.Platform Platform = 1;
+	}
+	message IndexType {}
+	
+	oneof Type {
+		ConfigType Config = 7;
+		ManifestType Manifest = 8;
+		IndexType Index = 9;
+	}
 }
 
 message ResolveImageConfigResponse {
-	string Digest = 1 [(gogoproto.customtype) = "github.com/opencontainers/go-digest.Digest", (gogoproto.nullable) = false];
-	bytes Config = 2;
+	string ManifestDigest = 1 [(gogoproto.customtype) = "github.com/opencontainers/go-digest.Digest", (gogoproto.nullable) = false];
+	bytes Data = 2;
+	string DataDigest = 3 [(gogoproto.customtype) = "github.com/opencontainers/go-digest.Digest", (gogoproto.nullable) = false];
 }
 
 message SolveRequest {

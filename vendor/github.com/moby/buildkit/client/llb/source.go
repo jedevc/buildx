@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "crypto/sha256" // for opencontainers/go-digest
 	"encoding/json"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -131,9 +132,10 @@ func Image(ref string, opts ...ImageOption) State {
 				if p == nil {
 					p = c.Platform
 				}
-				_, dt, err := info.metaResolver.ResolveImageConfig(ctx, ref, ResolveImageConfigOpt{
-					Platform:    p,
-					ResolveMode: info.resolveMode.String(),
+				_, _, dt, err := info.metaResolver.ResolveImageConfig(ctx, ref, ResolveImageConfigOpt{
+					Type:         ResolveConfigType{Platform: p},
+					ResolveMode:  info.resolveMode.String(),
+					ResolverType: ResolverTypeRegistry,
 				})
 				if err != nil {
 					return State{}, err
@@ -146,15 +148,16 @@ func Image(ref string, opts ...ImageOption) State {
 			if p == nil {
 				p = c.Platform
 			}
-			dgst, dt, err := info.metaResolver.ResolveImageConfig(context.TODO(), ref, ResolveImageConfigOpt{
-				Platform:    p,
-				ResolveMode: info.resolveMode.String(),
+			mdgst, _, dt, err := info.metaResolver.ResolveImageConfig(context.TODO(), ref, ResolveImageConfigOpt{
+				Type:         ResolveConfigType{Platform: p},
+				ResolveMode:  info.resolveMode.String(),
+				ResolverType: ResolverTypeRegistry,
 			})
 			if err != nil {
 				return State{}, err
 			}
-			if dgst != "" {
-				r, err = reference.WithDigest(r, dgst)
+			if mdgst != "" {
+				r, err = reference.WithDigest(r, mdgst)
 				if err != nil {
 					return State{}, err
 				}
@@ -450,6 +453,57 @@ func Differ(t DiffType, required bool) LocalOption {
 			Required: required,
 		}
 	})
+}
+
+func OCILayout(contentStoreID string, dig digest.Digest, opts ...OCILayoutOption) State {
+	gi := &OCILayoutInfo{}
+
+	for _, o := range opts {
+		o.SetOCILayoutOption(gi)
+	}
+	attrs := map[string]string{}
+	if gi.sessionID != "" {
+		attrs[pb.AttrOCILayoutSessionID] = gi.sessionID
+		addCap(&gi.Constraints, pb.CapSourceOCILayoutSessionID)
+	}
+
+	if ll := gi.layerLimit; ll != nil {
+		attrs[pb.AttrOCILayoutLayerLimit] = strconv.FormatInt(int64(*ll), 10)
+		addCap(&gi.Constraints, pb.CapSourceOCILayoutLayerLimit)
+	}
+
+	addCap(&gi.Constraints, pb.CapSourceOCILayout)
+
+	source := NewSource(fmt.Sprintf("oci-layout://%s@%s", contentStoreID, dig), attrs, gi.Constraints)
+	return NewState(source.Output())
+}
+
+type OCILayoutOption interface {
+	SetOCILayoutOption(*OCILayoutInfo)
+}
+
+type ociLayoutOptionFunc func(*OCILayoutInfo)
+
+func (fn ociLayoutOptionFunc) SetOCILayoutOption(li *OCILayoutInfo) {
+	fn(li)
+}
+
+func OCISessionID(id string) OCILayoutOption {
+	return ociLayoutOptionFunc(func(oi *OCILayoutInfo) {
+		oi.sessionID = id
+	})
+}
+
+func OCILayerLimit(limit int) OCILayoutOption {
+	return ociLayoutOptionFunc(func(oi *OCILayoutInfo) {
+		oi.layerLimit = &limit
+	})
+}
+
+type OCILayoutInfo struct {
+	constraintsWrapper
+	sessionID  string
+	layerLimit *int
 }
 
 type DiffType string

@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/docker/buildx/build"
+	"github.com/docker/buildx/util/driverloader"
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/opts"
@@ -54,7 +55,7 @@ func runPrune(dockerCli command.Cli, opts pruneOptions) error {
 		return nil
 	}
 
-	dis, err := getInstanceOrDefault(ctx, dockerCli, opts.builder, "")
+	dis, err := driverloader.GetInstanceOrDefault(ctx, dockerCli, opts.builder, "")
 	if err != nil {
 		return err
 	}

@@ -55,7 +55,7 @@ github.com/compose-spec/compose-go/types
 # github.com/containerd/console v1.0.3
 ## explicit; go 1.13
 github.com/containerd/console
-# github.com/containerd/containerd v1.6.4
+# github.com/containerd/containerd v1.6.6
 ## explicit; go 1.17
 github.com/containerd/containerd/api/services/content/v1
 github.com/containerd/containerd/archive/compression
@@ -334,7 +334,7 @@ github.com/mitchellh/go-wordwrap
 # github.com/mitchellh/mapstructure v1.5.0
 ## explicit; go 1.14
 github.com/mitchellh/mapstructure
-# github.com/moby/buildkit v0.10.1-0.20220513101920-55f0ecfdafaa
+# github.com/moby/buildkit v0.10.1-0.20220513101920-55f0ecfdafaa => ../../moby/buildkit
 ## explicit; go 1.17
 github.com/moby/buildkit/api/services/control
 github.com/moby/buildkit/api/types
@@ -431,7 +431,7 @@ github.com/opencontainers/go-digest
 ## explicit
 github.com/opencontainers/image-spec/specs-go
 github.com/opencontainers/image-spec/specs-go/v1
-# github.com/opencontainers/runc v1.1.1
+# github.com/opencontainers/runc v1.1.3
 ## explicit; go 1.16
 github.com/opencontainers/runc/libcontainer/user
 # github.com/pelletier/go-toml v1.9.4
@@ -624,7 +624,7 @@ golang.org/x/oauth2/jwt
 ## explicit
 golang.org/x/sync/errgroup
 golang.org/x/sync/semaphore
-# golang.org/x/sys v0.0.0-20220405210540-1e041c57c461
+# golang.org/x/sys v0.0.0-20220412211240-33da011f77ad
 ## explicit; go 1.17
 golang.org/x/sys/cpu
 golang.org/x/sys/execabs
@@ -988,6 +988,7 @@ sigs.k8s.io/structured-merge-diff/v4/value
 sigs.k8s.io/yaml
 # github.com/docker/cli => github.com/docker/cli v20.10.3-0.20220226190722-8667ccd1124c+incompatible
 # github.com/docker/docker => github.com/docker/docker v20.10.3-0.20220224222438-c78f6963a1c0+incompatible
+# github.com/moby/buildkit => ../../moby/buildkit
 # k8s.io/api => k8s.io/api v0.22.4
 # k8s.io/apimachinery => k8s.io/apimachinery v0.22.4
 # k8s.io/client-go => k8s.io/client-go v0.22.4

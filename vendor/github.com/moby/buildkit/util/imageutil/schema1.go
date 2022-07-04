@@ -13,21 +13,21 @@ import (
 	"github.com/pkg/errors"
 )
 
-func readSchema1Config(ctx context.Context, ref string, desc ocispecs.Descriptor, fetcher remotes.Fetcher, cache ContentCache) (digest.Digest, []byte, error) {
+func readSchema1Config(ctx context.Context, ref string, desc ocispecs.Descriptor, fetcher remotes.Fetcher, cache ContentCache) (digest.Digest, digest.Digest, []byte, error) {
 	rc, err := fetcher.Fetch(ctx, desc)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 	defer rc.Close()
 	dt, err := io.ReadAll(rc)
 	if err != nil {
-		return "", nil, errors.Wrap(err, "failed to fetch schema1 manifest")
+		return "", "", nil, errors.Wrap(err, "failed to fetch schema1 manifest")
 	}
 	dt, err = convertSchema1ConfigMeta(dt)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
-	return desc.Digest, dt, nil
+	return "", desc.Digest, dt, nil
 }
 
 func convertSchema1ConfigMeta(in []byte) ([]byte, error) {

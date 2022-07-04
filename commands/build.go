@@ -19,12 +19,14 @@ import (
 	"github.com/docker/buildx/monitor"
 	"github.com/docker/buildx/util/buildflags"
 	"github.com/docker/buildx/util/confutil"
+	"github.com/docker/buildx/util/driverloader"
 	"github.com/docker/buildx/util/platformutil"
 	"github.com/docker/buildx/util/progress"
 	"github.com/docker/buildx/util/tracing"
 	"github.com/docker/cli-docs-tool/annotation"
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
+	"github.com/docker/cli/cli/config"
 	dockeropts "github.com/docker/cli/opts"
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/pkg/ioutils"
@@ -148,7 +150,7 @@ func runBuild(dockerCli command.Cli, in buildOptions) (err error) {
 	}
 	opts.Platforms = platforms
 
-	opts.Session = append(opts.Session, authprovider.NewDockerAuthProvider(os.Stderr))
+	opts.Session = append(opts.Session, authprovider.NewDockerAuthProvider(config.LoadDefaultConfigFile(os.Stderr)))
 
 	secrets, err := buildflags.ParseSecretSpecs(in.secrets)
 	if err != nil {
@@ -270,7 +272,7 @@ type nopCloser struct {
 func (c nopCloser) Close() error { return nil }
 
 func buildTargets(ctx context.Context, dockerCli command.Cli, opts map[string]build.Options, progressMode, contextPathHash, instance string, metadataFile string) (imageID string, res *build.ResultContext, err error) {
-	dis, err := getInstanceOrDefault(ctx, dockerCli, instance, contextPathHash)
+	dis, err := driverloader.GetInstanceOrDefault(ctx, dockerCli, instance, contextPathHash)
 	if err != nil {
 		return "", nil, err
 	}

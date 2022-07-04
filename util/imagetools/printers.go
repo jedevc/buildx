@@ -326,7 +326,7 @@ func (p *Printer) printBuildInfo(bi *binfotypes.BuildInfo, pfx string, out io.Wr
 }
 
 func (p *Printer) getImageConfig(platform *ocispecs.Platform) (*ocispecs.Image, []byte, error) {
-	_, dtic, err := p.resolver.ImageConfig(p.ctx, p.name, platform)
+	_, _, dtic, err := p.resolver.ImageConfig(p.ctx, p.name, platform)
 	if err != nil {
 		return nil, nil, err
 	}

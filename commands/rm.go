@@ -7,6 +7,7 @@ import (
 
 	"github.com/docker/buildx/store"
 	"github.com/docker/buildx/store/storeutil"
+	"github.com/docker/buildx/util/driverloader"
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
 	"github.com/moby/buildkit/util/appcontext"
@@ -111,7 +112,7 @@ func rmCmd(dockerCli command.Cli, rootOpts *rootOptions) *cobra.Command {
 }
 
 func rm(ctx context.Context, dockerCli command.Cli, in rmOptions, ng *store.NodeGroup) error {
-	dis, err := driversForNodeGroup(ctx, dockerCli, ng, "")
+	dis, err := driverloader.DriversForNodeGroup(ctx, dockerCli, ng, "")
 	if err != nil {
 		return err
 	}

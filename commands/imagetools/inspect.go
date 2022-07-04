@@ -1,12 +1,16 @@
 package commands
 
 import (
-	"github.com/docker/buildx/store"
-	"github.com/docker/buildx/store/storeutil"
-	"github.com/docker/buildx/util/imagetools"
+	"context"
+	"fmt"
+
+	"github.com/docker/buildx/util/driverloader"
 	"github.com/docker/cli-docs-tool/annotation"
 	"github.com/docker/cli/cli"
 	"github.com/docker/cli/cli/command"
+	"github.com/moby/buildkit/client"
+	"github.com/moby/buildkit/client/llb"
+	gateway "github.com/moby/buildkit/frontend/gateway/client"
 	"github.com/moby/buildkit/util/appcontext"
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
@@ -25,37 +29,51 @@ func runInspect(dockerCli command.Cli, in inspectOptions, name string) error {
 		return errors.Errorf("format and raw cannot be used together")
 	}
 
-	txn, release, err := storeutil.GetStore(dockerCli)
+	dis, err := driverloader.GetInstanceOrDefault(ctx, dockerCli, in.builder, "")
 	if err != nil {
 		return err
 	}
-	defer release()
 
-	var ng *store.NodeGroup
-
-	if in.builder != "" {
-		ng, err = storeutil.GetNodeGroup(txn, dockerCli, in.builder)
-		if err != nil {
-			return err
-		}
-	} else {
-		ng, err = storeutil.GetCurrentInstance(txn, dockerCli)
-		if err != nil {
+	for _, di := range dis {
+		if di.Err != nil {
 			return err
 		}
 	}
 
-	imageopt, err := storeutil.GetImageConfig(dockerCli, ng)
-	if err != nil {
-		return err
+	for _, di := range dis {
+		c, err := di.Driver.Client(ctx)
+		if err != nil {
+			return err
+		}
+
+		_, err = c.Build(ctx, client.SolveOpt{}, "", func(ctx context.Context, c gateway.Client) (*gateway.Result, error) {
+			_, _, conf, err := c.ResolveImageConfig(ctx, name, llb.ResolveImageConfigOpt{
+				Type: llb.ResolveIndexType{},
+			})
+			if err != nil {
+				return nil, err
+			}
+			fmt.Println(">>>", string(conf))
+			return nil, nil
+		}, nil)
+		if err != nil {
+			return err
+		}
 	}
 
-	p, err := imagetools.NewPrinter(ctx, imageopt, name, in.format)
-	if err != nil {
-		return err
-	}
+	return nil
 
-	return p.Print(in.raw, dockerCli.Out())
+	// imageopt, err := storeutil.GetImageConfig(dockerCli, ng)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// p, err := imagetools.NewPrinter(ctx, imageopt, name, in.format)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// return p.Print(in.raw, dockerCli.Out())
 }
 
 func inspectCmd(dockerCli command.Cli, rootOpts RootOptions) *cobra.Command {

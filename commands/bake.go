@@ -10,6 +10,7 @@ import (
 	"github.com/docker/buildx/bake"
 	"github.com/docker/buildx/build"
 	"github.com/docker/buildx/util/confutil"
+	"github.com/docker/buildx/util/driverloader"
 	"github.com/docker/buildx/util/progress"
 	"github.com/docker/buildx/util/tracing"
 	"github.com/docker/cli/cli/command"
@@ -86,7 +87,7 @@ func runBake(dockerCli command.Cli, targets []string, in bakeOptions) (err error
 		}
 	}()
 
-	dis, err := getInstanceOrDefault(ctx, dockerCli, in.builder, contextPathHash)
+	dis, err := driverloader.GetInstanceOrDefault(ctx, dockerCli, in.builder, contextPathHash)
 	if err != nil {
 		return err
 	}

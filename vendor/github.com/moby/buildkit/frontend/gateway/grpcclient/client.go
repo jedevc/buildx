@@ -448,22 +448,57 @@ func (c *grpcClient) Solve(ctx context.Context, creq client.SolveRequest) (res *
 	return res, nil
 }
 
-func (c *grpcClient) ResolveImageConfig(ctx context.Context, ref string, opt llb.ResolveImageConfigOpt) (digest.Digest, []byte, error) {
-	var p *opspb.Platform
-	if platform := opt.Platform; platform != nil {
-		p = &opspb.Platform{
-			OS:           platform.OS,
-			Architecture: platform.Architecture,
-			Variant:      platform.Variant,
-			OSVersion:    platform.OSVersion,
-			OSFeatures:   platform.OSFeatures,
+func (c *grpcClient) ResolveImageConfig(ctx context.Context, ref string, opt llb.ResolveImageConfigOpt) (digest.Digest, digest.Digest, []byte, error) {
+	req := &pb.ResolveImageConfigRequest{
+		Ref:          ref,
+		ResolveMode:  opt.ResolveMode,
+		LogName:      opt.LogName,
+		ResolverType: int32(opt.ResolverType),
+		SessionID:    opt.SessionID,
+	}
+
+	switch t := opt.Type.(type) {
+	case llb.ResolveConfigType:
+		ct := &pb.ResolveImageConfigRequest_Config{
+			Config: &pb.ResolveImageConfigRequest_ConfigType{},
 		}
+		if platform := t.Platform; platform != nil {
+			ct.Config.Platform = &opspb.Platform{
+				OS:           platform.OS,
+				Architecture: platform.Architecture,
+				Variant:      platform.Variant,
+				OSVersion:    platform.OSVersion,
+				OSFeatures:   platform.OSFeatures,
+			}
+		}
+		req.Type = ct
+	case llb.ResolveManifestType:
+		mt := &pb.ResolveImageConfigRequest_Manifest{
+			Manifest: &pb.ResolveImageConfigRequest_ManifestType{},
+		}
+		if platform := t.Platform; platform != nil {
+			mt.Manifest.Platform = &opspb.Platform{
+				OS:           platform.OS,
+				Architecture: platform.Architecture,
+				Variant:      platform.Variant,
+				OSVersion:    platform.OSVersion,
+				OSFeatures:   platform.OSFeatures,
+			}
+		}
+		req.Type = mt
+	case llb.ResolveIndexType:
+		req.Type = &pb.ResolveImageConfigRequest_Index{
+			Index: &pb.ResolveImageConfigRequest_IndexType{},
+		}
+	default:
+		panic("oh no")
 	}
-	resp, err := c.client.ResolveImageConfig(ctx, &pb.ResolveImageConfigRequest{Ref: ref, Platform: p, ResolveMode: opt.ResolveMode, LogName: opt.LogName})
+	fmt.Println(req.Type.(*pb.ResolveImageConfigRequest_Manifest).Manifest)
+	resp, err := c.client.ResolveImageConfig(ctx, req)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
-	return resp.Digest, resp.Config, nil
+	return resp.ManifestDigest, resp.DataDigest, resp.Data, nil
 }
 
 func (c *grpcClient) BuildOpts() client.BuildOpts {

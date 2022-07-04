@@ -44,7 +44,7 @@ func AddLease(f func(context.Context) error) {
 	leasesMu.Unlock()
 }
 
-func Config(ctx context.Context, str string, resolver remotes.Resolver, cache ContentCache, leaseManager leases.Manager, p *ocispecs.Platform) (digest.Digest, []byte, error) {
+func Config(ctx context.Context, str string, resolver remotes.Resolver, cache ContentCache, leaseManager leases.Manager, p *ocispecs.Platform) (digest.Digest, digest.Digest, []byte, error) {
 	// TODO: fix buildkit to take interface instead of struct
 	var platform platforms.MatchComparer
 	if p != nil {
@@ -54,13 +54,13 @@ func Config(ctx context.Context, str string, resolver remotes.Resolver, cache Co
 	}
 	ref, err := reference.Parse(str)
 	if err != nil {
-		return "", nil, errors.WithStack(err)
+		return "", "", nil, errors.WithStack(err)
 	}
 
 	if leaseManager != nil {
 		ctx2, done, err := leaseutil.WithLease(ctx, leaseManager, leases.WithExpiration(5*time.Minute), leaseutil.MakeTemporary)
 		if err != nil {
-			return "", nil, errors.WithStack(err)
+			return "", "", nil, errors.WithStack(err)
 		}
 		ctx = ctx2
 		defer func() {
@@ -86,13 +86,13 @@ func Config(ctx context.Context, str string, resolver remotes.Resolver, cache Co
 	if desc.MediaType == "" {
 		_, desc, err = resolver.Resolve(ctx, ref.String())
 		if err != nil {
-			return "", nil, err
+			return "", "", nil, err
 		}
 	}
 
 	fetcher, err := resolver.Fetcher(ctx, ref.String())
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	if desc.MediaType == images.MediaTypeDockerSchema1Manifest {
@@ -106,19 +106,149 @@ func Config(ctx context.Context, str string, resolver remotes.Resolver, cache Co
 		children,
 	}
 	if err := images.Dispatch(ctx, images.Handlers(handlers...), nil, desc); err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 	config, err := images.Config(ctx, cache, desc, platform)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	dt, err := content.ReadBlob(ctx, cache, config)
 	if err != nil {
-		return "", nil, err
+		return "", "", nil, err
 	}
 
-	return desc.Digest, dt, nil
+	return desc.Digest, config.Digest, dt, nil
+}
+
+func Manifest(ctx context.Context, str string, resolver remotes.Resolver, cache ContentCache, leaseManager leases.Manager, p *ocispecs.Platform) (digest.Digest, digest.Digest, []byte, error) {
+	// TODO: fix buildkit to take interface instead of struct
+	var platform platforms.MatchComparer
+	if p != nil {
+		platform = platforms.Only(*p)
+	} else {
+		platform = platforms.Default()
+	}
+	ref, err := reference.Parse(str)
+	if err != nil {
+		return "", "", nil, errors.WithStack(err)
+	}
+
+	if leaseManager != nil {
+		ctx2, done, err := leaseutil.WithLease(ctx, leaseManager, leases.WithExpiration(5*time.Minute), leaseutil.MakeTemporary)
+		if err != nil {
+			return "", "", nil, errors.WithStack(err)
+		}
+		ctx = ctx2
+		defer func() {
+			// this lease is not deleted to allow other components to access manifest/config from cache. It will be deleted after 5 min deadline or on pruning inactive builder
+			AddLease(done)
+		}()
+	}
+
+	desc := ocispecs.Descriptor{
+		Digest: ref.Digest(),
+	}
+	if desc.Digest != "" {
+		ra, err := cache.ReaderAt(ctx, desc)
+		if err == nil {
+			desc.Size = ra.Size()
+			mt, err := DetectManifestMediaType(ra)
+			if err == nil {
+				desc.MediaType = mt
+			}
+		}
+	}
+	// use resolver if desc is incomplete
+	if desc.MediaType == "" {
+		_, desc, err = resolver.Resolve(ctx, ref.String())
+		if err != nil {
+			return "", "", nil, err
+		}
+	}
+
+	fetcher, err := resolver.Fetcher(ctx, ref.String())
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	if desc.MediaType == images.MediaTypeDockerSchema1Manifest {
+		panic("nope")
+		return readSchema1Config(ctx, ref.String(), desc, fetcher, cache)
+	}
+
+	children := childrenConfigHandler(cache, platform)
+
+	handlers := []images.Handler{
+		retryhandler.New(limited.FetchHandler(cache, fetcher, str), func(_ []byte) {}),
+		children,
+	}
+	if err := images.Dispatch(ctx, images.Handlers(handlers...), nil, desc); err != nil {
+		return "", "", nil, err
+	}
+	dt, err := content.ReadBlob(ctx, cache, desc)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	return desc.Digest, desc.Digest, dt, nil
+}
+
+func Index(ctx context.Context, str string, resolver remotes.Resolver, cache ContentCache, leaseManager leases.Manager) (digest.Digest, digest.Digest, []byte, error) {
+	ref, err := reference.Parse(str)
+	if err != nil {
+		return "", "", nil, errors.WithStack(err)
+	}
+
+	if leaseManager != nil {
+		ctx2, done, err := leaseutil.WithLease(ctx, leaseManager, leases.WithExpiration(5*time.Minute), leaseutil.MakeTemporary)
+		if err != nil {
+			return "", "", nil, errors.WithStack(err)
+		}
+		ctx = ctx2
+		defer func() {
+			// this lease is not deleted to allow other components to access manifest/config from cache. It will be deleted after 5 min deadline or on pruning inactive builder
+			AddLease(done)
+		}()
+	}
+
+	desc := ocispecs.Descriptor{
+		Digest: ref.Digest(),
+	}
+	if desc.Digest != "" {
+		ra, err := cache.ReaderAt(ctx, desc)
+		if err == nil {
+			desc.Size = ra.Size()
+			mt, err := DetectManifestMediaType(ra)
+			if err == nil {
+				desc.MediaType = mt
+			}
+		}
+	}
+	// use resolver if desc is incomplete
+	if desc.MediaType == "" {
+		_, desc, err = resolver.Resolve(ctx, ref.String())
+		if err != nil {
+			return "", "", nil, err
+		}
+	}
+
+	fetcher, err := resolver.Fetcher(ctx, ref.String())
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	if desc.MediaType == images.MediaTypeDockerSchema1Manifest {
+		panic("nope")
+		return readSchema1Config(ctx, ref.String(), desc, fetcher, cache)
+	}
+
+	dt, err := content.ReadBlob(ctx, cache, desc)
+	if err != nil {
+		return "", "", nil, err
+	}
+
+	return "", desc.Digest, dt, nil
 }
 
 func childrenConfigHandler(provider content.Provider, platform platforms.MatchComparer) images.HandlerFunc {

@@ -21,25 +21,35 @@ solution.
 ## Synopsis
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
-  --cache-to type=local,dest=path/to/local/dir,mode=...,compression=...,oci-mediatypes=... \
-  --cache-from type=local,src=path/to/local/dir
+$ docker buildx build . --push -t <registry>/<image> \
+  --cache-to type=local,dest=path/to/local/dir[,parameters...] \
+  --cache-from type=local,src=path/to/local/dir,
 ```
 
-The supported parameters are:
+`--cache-to` options:
 
 - `dest`: absolute or relative path to the local directory where you want to
   export the cache to.
+- `mode`: specify cache layers to export (default: `min`), see
+  [cache mode](./index.md#cache-mode)
+- `oci-mediatypes`: whether to use OCI media types in exported manifests
+  (default `true`, since BuildKit `v0.8`), see
+  [OCI media types](./index.md#oci-media-types)
+- `compression`: compression type for layers newly created and cached (default:
+  `gzip`), see [cache compression](./index.md#cache-compression)
+- `compression-level`: compression level for `gzip`, `estargz` (0-9) and `zstd`
+  (0-22)
+- `force-compression`: forcibly apply `compression` option to all layers
+
+`--cache-from` options:
+
 - `src`: absolute or relative path to the local directory where you want to
   import cache from.
+- `digest`: specify explicit digest of the manifest list to import, see
+  [cache versioning](#cache-versioning)
 
   If the `src` cache doesn't exist, then the cache import step will fail, but
   the build will continue.
-
-- `mode`: see [cache mode](./index.md#cache-mode)
-- `compression`: see [cache compression](./index.md#cache-compression)
-- `oci-mediatypes`: see [OCI media types](./index.md#oci-media-types)
-- `digest`: see [cache versioning](#cache-versioning)
 
 ## Cache versioning
 
@@ -79,7 +89,7 @@ When importing cache using `--cache-to`, you can specify the `digest` parameter
 to force loading an older version of the cache, for example:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
+$ docker buildx build . --push -t <registry>/<image> \
   --cache-to type=local,dest=path/to/local/dir \
   --cache-from type=local,ref=path/to/local/dir,digest=sha256:6982c70595cb91769f61cd1e064cf5f41d5357387bab6b18c0164c5f98c1f707
 ```

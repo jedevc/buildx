@@ -1,8 +1,11 @@
 # GitHub Actions cache storage
 
+> **Warning**
+>
 > The GitHub Actions cache is a beta feature. You can use it today, in current
 > releases of Buildx and BuildKit. However, the interface and behavior are
 > unstable and may change in future releases.
+{: .warning }
 
 The GitHub Actions cache utilizes the
 [GitHub-provided Action's cache](https://github.com/actions/cache) available
@@ -24,14 +27,24 @@ inside your GitHub action pipelines, as long as your use case falls within the
 ## Synopsis
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
-  --cache-to type=gha,url=...,token=...,scope=... \
-  --cache-from type=gha,url=...,token=...,scope=...
+$ docker buildx build . --push -t <registry>/<image> \
+  --cache-to type=gha[,parameters...] \
+  --cache-from type=gha[,parameters...]
 ```
+
+`--cache-to` options:
 
 - `url`: cache server URL (default `$ACTIONS_CACHE_URL`)
 - `token`: access token (default `$ACTIONS_RUNTIME_TOKEN`)
-- `scope`: The cache scope (defaults to the name of the Git branch).
+- `scope`: cache scope (defaults to the name of the current Git branch).
+- `mode`: specify cache layers to export (default: `min`), see
+  [cache mode](./index.md#cache-mode)
+
+`--cache-from` options:
+
+- `scope`: cache scope (defaults to the name of the current Git branch).
+
+## Authentication
 
 If the `url` or `token` parameters are left unspecified, the `gha` cache backend
 will fall back to using environment variables. If you invoke the `docker buildx`
@@ -53,10 +66,10 @@ example, the cache is set to a combination of the branch name and the image
 name, to ensure each branch gets its own cache):
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
+$ docker buildx build . --push -t <registry>/<image> \
   --cache-to type=gha,url=...,token=...,scope=$GITHUB_REF_NAME-image
   --cache-from type=gha,url=...,token=...,scope=$GITHUB_REF_NAME-image
-$ docker buildx build . --push -t <user>/<image2> \
+$ docker buildx build . --push -t <registry>/<image2> \
   --cache-to type=gha,url=...,token=...,scope=$GITHUB_REF_NAME-image2
   --cache-from type=gha,url=...,token=...,scope=$GITHUB_REF_NAME-image2
 ```
@@ -66,7 +79,7 @@ GitHub's
 still apply. Only the cache for the current branch, the base branch and the
 default branch is accessible by a workflow.
 
-### With `docker/build-push-action`
+### Using `docker/build-push-action`
 
 When using the
 [`docker/build-push-action`](https://github.com/docker/build-push-action), the
@@ -81,20 +94,12 @@ For example:
   with:
     context: .
     push: true
-    tags: user/app:latest
+    tags: "<registry>/<image>:latest"
     cache-from: type=gha
     cache-to: type=gha,mode=max
 ```
 
 <!-- FIXME: cross-link to ci docs once docs.docker.com has them -->
-
-## Cache options
-
-The `gha` cache has lots of parameters to adjust its behavior.
-
-### Cache mode
-
-See [Registry - Cache mode](./registry.md#cache-mode) for more information.
 
 ## Further reading
 

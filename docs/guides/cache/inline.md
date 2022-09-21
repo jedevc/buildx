@@ -12,14 +12,14 @@ To export cache using `inline` storage, pass `type=inline` to the `--cache-to`
 option:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> --cache-to type=inline
+$ docker buildx build . --push -t <registry>/<image> --cache-to type=inline
 ```
 
 Alternatively, you can also export inline cache by setting the build argument
 `BUILDKIT_INLINE_CACHE=1`, instead of using the `--cache-to` flag:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> --arg BUILDKIT_INLINE_CACHE=1
+$ docker buildx build . --push -t <registry>/<image> --arg BUILDKIT_INLINE_CACHE=1
 ```
 
 To import the resulting cache on a future build, pass `type=registry` to
@@ -27,16 +27,16 @@ To import the resulting cache on a future build, pass `type=registry` to
 the specified registry:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> --cache-from type=registry,ref=<user>/<image>
+$ docker buildx build . --push -t <registry>/<image> --cache-from type=registry,ref=<registry>/<image>
 ```
 
 Most of the time, you'll want to have each build both import and export cache
 from the cache store. To do this, specify both `--cache-to` and `--cache-from`:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
+$ docker buildx build . --push -t <registry>/<image> \
     --cache-to type=inline \
-    --cache-from type=registry,ref=<user>/<image>
+    --cache-from type=registry,ref=<registry>/<image>
 ```
 
 ## Further reading

@@ -29,16 +29,28 @@ Unlike the simpler `inline` cache, the `registry` cache supports several
 configuration parameters:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
-  --cache-to type=registry,ref=...,mode=...,compression=...,oci-mediatypes=... \
-  --cache-from type=registry,ref=...
+$ docker buildx build . --push -t <registry>/<image> \
+  --cache-to type=registry,ref=<registry>/<cache-image>[,parameters...] \
+  --cache-from type=registry,ref=<registry>/<cache-image>
 ```
 
-- `ref`: full name (registry URI, namespace, and name) of the cache image that
-  you want to import from, or export to.
-- `mode`: see [cache mode](./index.md#cache-mode)
-- `compression`: see [cache compression](./index.md#cache-compression)
-- `oci-mediatypes`:  see [OCI media types](./index.md#oci-media-types)
+`--cache-to` options:
+
+- `mode`: specify cache layers to export (default: `min`), see
+  [cache mode](./index.md#cache-mode)
+- `ref`: full address and name of the cache image that you want to export.
+- `oci-mediatypes`: whether to use OCI media types in exported manifests
+  (default `true`, since BuildKit `v0.8`), see
+  [OCI media types](./index.md#oci-media-types)
+- `compression`: compression type for layers newly created and cached (default:
+  `gzip`), see [cache compression](./index.md#cache-compression)
+- `compression-level`: compression level for `gzip`, `estargz` (0-9) and `zstd`
+  (0-22)
+- `force-compression`: forcibly apply `compression` option to all layers
+
+`--cache-from` options:
+
+- `ref`: full address and name of the cache image that you want to import.
 
 You can choose any valid value for `ref`, as long as it's not the same as the
 target location that you push your image to. You might choose different tags

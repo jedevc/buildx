@@ -14,7 +14,8 @@ important to keep the runtime of image builds as low as possible.
 > manipulate them using the dedicated
 > [--secret](../../reference/buildx_build.md#secret) functionality instead of
 > using manually `COPY`d files or build `ARG`s. Using manually managed secrets
-> like this with exported cache could lead to an information leak. {: .warning }
+> like this with exported cache could lead to an information leak.
+{: .warning }
 
 ## Backends
 
@@ -53,18 +54,21 @@ be explicitly exported to, and explicitly imported from. All cache exporters
 except for the `inline` cache requires that you
 [select an alternative Buildx driver](../drivers/index.md).
 
-Example `buildx` command syntax, using import and export cache:
+Example `buildx` command using the `registry` backend, using import and export cache:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
-  --cache-to type=<cache-type>[,parameters...] \
-  --cache-from type=<cache-type>[,parameters...]
+$ docker buildx build . --push -t <registry>/<image> \
+  --cache-to type=registry,ref=<registry>/<cache-image>[,parameters...] \
+  --cache-from type=registry,ref=<registry>/<cache-image>[,parameters...]
 ```
 
+> **Warning**
+>
 > As a general rule, each cache writes to some location. No location can be
 > written to twice, without overwriting the previously cached data. If you want
 > to maintain multiple scoped caches (for example, a cache per Git branch), then
-> ensure that you use different locations for exported cache. {: .important }
+> ensure that you use different locations for exported cache.
+{: .important }
 
 ## Multiple caches
 
@@ -76,18 +80,20 @@ following example shows importing cache from multiple locations using the
 registry cache backend:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
-  --cache-to type=registry,ref=<user>/<cache-image>:<branch> \
-  --cache-from type=registry,ref=<user>/<cache-image>:<branch> \
-  --cache-from type=registry,ref=<user>/<cache-image>:main
+$ docker buildx build . --push -t <registry>/<image> \
+  --cache-to type=registry,ref=<registry>/<cache-image>:<branch> \
+  --cache-from type=registry,ref=<registry>/<cache-image>:<branch> \
+  --cache-from type=registry,ref=<registry>/<cache-image>:main
 ```
 
 ## Configuration options
 
+<!-- FIXME: link to image exporter guide when it's written -->
+
 This section describes some of the configuration options available when
 generating cache exports. The options described here are common for at least two
 or more backend types. Additionally, the different backend types support
-platform-specific parameters as well. See the detailed page about each backend
+specific parameters as well. See the detailed page about each backend
 type for more information about which configuration parameters apply.
 
 The common parameters described here are:
@@ -105,9 +111,9 @@ Mode can be set to either of two options: `mode=min` or `mode=max`. For example,
 to build the cache with `mode=max` with the registry backend:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
-  --cache-to type=registry,ref=<user>/<cache-image>,mode=max \
-  --cache-from type=registry,ref=<user>/<cache-image>
+$ docker buildx build . --push -t <registry>/<image> \
+  --cache-to type=registry,ref=<registry>/<cache-image>,mode=max \
+  --cache-from type=registry,ref=<registry>/<cache-image>
 ```
 
 This option is only set when exporting a cache, using `--cache-to`. When
@@ -121,7 +127,7 @@ even those of intermediate steps.
 While `min` cache is typically smaller (which speeds up import/export times, and
 reduces storage costs), `max` cache is more likely to get more cache hits.
 Depending on the complexity and location of your build, you should experiment
-with both parameters to get the results.
+with both parameters to find the results that work best for you.
 
 ### Cache compression
 
@@ -136,9 +142,9 @@ To select the compression algorithm, you can use the
 cache with `compression=zstd`:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
-  --cache-to type=registry,ref=<user>/<cache-image>,compression=zstd \
-  --cache-from type=registry,ref=<user>/<cache-image>
+$ docker buildx build . --push -t <registry>/<image> \
+  --cache-to type=registry,ref=<registry>/<cache-image>,compression=zstd \
+  --cache-from type=registry,ref=<registry>/<cache-image>
 ```
 
 Use the `compression-level=<value>` option alongside the `compression` parameter
@@ -164,16 +170,14 @@ the previous compression algorithm.
 ### OCI media types
 
 Like the `image` exporter, the `registry` cache exporter supports creating
-images with Docker media types or with OCI media types. To enable OCI Media
-types, you can use the `oci-mediatypes` property:
+images with Docker media types or with OCI media types. To export OCI media
+type cache, use the `oci-mediatypes` property:
 
 ```console
-$ docker buildx build . --push -t <user>/<image> \
-  --cache-to type=registry,ref=<user>/<cache-image>,oci-mediatypes=true \
-  --cache-from type=registry,ref=<user>/<cache-image>
+$ docker buildx build . --push -t <registry>/<image> \
+  --cache-to type=registry,ref=<registry>/<cache-image>,oci-mediatypes=true \
+  --cache-from type=registry,ref=<registry>/<cache-image>
 ```
 
 This property is only meaningful with the `--cache-to` flag. When fetching
 cache, BuildKit will auto-detect the correct media types to use.
-
-<!-- FIXME: link to image exporter guide when it's written -->

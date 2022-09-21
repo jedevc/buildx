@@ -1,7 +1,10 @@
 # Azure Blob Storage cache storage
 
+> **Warning**
+>
 > This cache backend is unreleased. You can use it today, by using the
-> `moby/buildkit:master` image in your Buildx driver. {: .warning }
+> `moby/buildkit:master` image in your Buildx driver.
+{: .warning }
 
 The `azblob` cache store uploads your resulting build cache to
 [Azure's blob storage service](https://azure.microsoft.com/en-us/services/storage/blobs/).
@@ -21,16 +24,25 @@ The `azblob` cache store uploads your resulting build cache to
 
 ```console
 $ docker buildx build . --push -t <registry>/<image> \
-  --cache-to type=azblob,account_url=...,name=...,secret_access_key=...,mode=... \
-  --cache-from type=azblob,account_url=...,name=...,secret_access_key=...
+  --cache-to type=azblob,name=<cache-image>[,parameters...] \
+  --cache-from type=azblob,name=<cache-image>[,parameters...]
 ```
+
+`--cache-to` options:
 
 - `account_url`: the base address of the blob storage account, for example:
   `https://myaccount.blob.core.windows.net`
-- `name`: the name of the image.
+- `name`: the name of the cache image.
 - `secret_access_key`: specifies the
   [Azure Blob Storage account key](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage).
-- `mode`: see [cache mode](./index.md#cache-mode)
+- `mode`: specify cache layers to export (default: `min`), see
+  [cache mode](./index.md#cache-mode)
+
+`--cache-from` options:
+
+- `name`: the name of the cache image.
+
+## Authentication
 
 The `secret_access_key`, if left unspecified, is read from environment variables
 on the BuildKit server following the scheme for the

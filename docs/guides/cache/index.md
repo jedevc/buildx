@@ -15,7 +15,6 @@ important to keep the runtime of image builds as low as possible.
 > [--secret](../../reference/buildx_build.md#secret) functionality instead of
 > using manually `COPY`d files or build `ARG`s. Using manually managed secrets
 > like this with exported cache could lead to an information leak.
-{: .warning }
 
 ## Backends
 
@@ -54,7 +53,8 @@ be explicitly exported to, and explicitly imported from. All cache exporters
 except for the `inline` cache requires that you
 [select an alternative Buildx driver](../drivers/index.md).
 
-Example `buildx` command using the `registry` backend, using import and export cache:
+Example `buildx` command using the `registry` backend, using import and export
+cache:
 
 ```console
 $ docker buildx build . --push -t <registry>/<image> \
@@ -68,7 +68,6 @@ $ docker buildx build . --push -t <registry>/<image> \
 > written to twice, without overwriting the previously cached data. If you want
 > to maintain multiple scoped caches (for example, a cache per Git branch), then
 > ensure that you use different locations for exported cache.
-{: .important }
 
 ## Multiple caches
 
@@ -93,8 +92,8 @@ $ docker buildx build . --push -t <registry>/<image> \
 This section describes some of the configuration options available when
 generating cache exports. The options described here are common for at least two
 or more backend types. Additionally, the different backend types support
-specific parameters as well. See the detailed page about each backend
-type for more information about which configuration parameters apply.
+specific parameters as well. See the detailed page about each backend type for
+more information about which configuration parameters apply.
 
 The common parameters described here are:
 
@@ -170,8 +169,8 @@ the previous compression algorithm.
 ### OCI media types
 
 Like the `image` exporter, the `registry` cache exporter supports creating
-images with Docker media types or with OCI media types. To export OCI media
-type cache, use the `oci-mediatypes` property:
+images with Docker media types or with OCI media types. To export OCI media type
+cache, use the `oci-mediatypes` property:
 
 ```console
 $ docker buildx build . --push -t <registry>/<image> \

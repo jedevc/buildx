@@ -4,7 +4,6 @@
 >
 > This cache backend is unreleased. You can use it today, by using the
 > `moby/buildkit:master` image in your Buildx driver.
-{: .warning }
 
 The `azblob` cache store uploads your resulting build cache to
 [Azure's blob storage service](https://azure.microsoft.com/en-us/services/storage/blobs/).
@@ -35,9 +34,11 @@ Common parameters:
 Parameters for `--cache-to`:
 
 - `account_url`: the base address of the blob storage account, for example:
-  `https://myaccount.blob.core.windows.net`. See [authentication](#authentication).
+  `https://myaccount.blob.core.windows.net`. See
+  [authentication](#authentication).
 - `secret_access_key`: specifies the
-  [Azure Blob Storage account key](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage), see [authentication](#authentication).
+  [Azure Blob Storage account key](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage),
+  see [authentication](#authentication).
 - `mode`: specify cache layers to export (default: `min`), see
   [cache mode](./index.md#cache-mode)
 

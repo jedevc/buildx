@@ -5,7 +5,6 @@
 > The GitHub Actions cache is a beta feature. You can use it today, in current
 > releases of Buildx and BuildKit. However, the interface and behavior are
 > unstable and may change in future releases.
-{: .warning }
 
 The GitHub Actions cache utilizes the
 [GitHub-provided Action's cache](https://github.com/actions/cache) available

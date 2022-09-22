@@ -26,7 +26,7 @@ $ docker buildx build . --push -t <registry>/<image> \
   --cache-from type=local,src=path/to/local/dir,
 ```
 
-`--cache-to` options:
+Parameters for `--cache-to`:
 
 - `dest`: absolute or relative path to the local directory where you want to
   export the cache to.
@@ -41,7 +41,7 @@ $ docker buildx build . --push -t <registry>/<image> \
   (0-22)
 - `force-compression`: forcibly apply `compression` option to all layers
 
-`--cache-from` options:
+Parameters for `--cache-from`:
 
 - `src`: absolute or relative path to the local directory where you want to
   import cache from.

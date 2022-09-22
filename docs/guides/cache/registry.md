@@ -34,11 +34,15 @@ $ docker buildx build . --push -t <registry>/<image> \
   --cache-from type=registry,ref=<registry>/<cache-image>
 ```
 
-`--cache-to` options:
+Common parameters:
+
+- `ref`: full address and name of the cache image that you want to import or
+  export.
+
+Parameters for `--cache-to`:
 
 - `mode`: specify cache layers to export (default: `min`), see
   [cache mode](./index.md#cache-mode)
-- `ref`: full address and name of the cache image that you want to export.
 - `oci-mediatypes`: whether to use OCI media types in exported manifests
   (default `true`, since BuildKit `v0.8`), see
   [OCI media types](./index.md#oci-media-types)
@@ -47,10 +51,6 @@ $ docker buildx build . --push -t <registry>/<image> \
 - `compression-level`: compression level for `gzip`, `estargz` (0-9) and `zstd`
   (0-22)
 - `force-compression`: forcibly apply `compression` option to all layers
-
-`--cache-from` options:
-
-- `ref`: full address and name of the cache image that you want to import.
 
 You can choose any valid value for `ref`, as long as it's not the same as the
 target location that you push your image to. You might choose different tags

@@ -28,19 +28,18 @@ $ docker buildx build . --push -t <registry>/<image> \
   --cache-from type=azblob,name=<cache-image>[,parameters...]
 ```
 
-`--cache-to` options:
+Common parameters:
+
+- `name`: the name of the cache image.
+
+Parameters for `--cache-to`:
 
 - `account_url`: the base address of the blob storage account, for example:
-  `https://myaccount.blob.core.windows.net`
-- `name`: the name of the cache image.
+  `https://myaccount.blob.core.windows.net`. See [authentication](#authentication).
 - `secret_access_key`: specifies the
-  [Azure Blob Storage account key](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage).
+  [Azure Blob Storage account key](https://docs.microsoft.com/en-us/azure/storage/common/storage-account-keys-manage), see [authentication](#authentication).
 - `mode`: specify cache layers to export (default: `min`), see
   [cache mode](./index.md#cache-mode)
-
-`--cache-from` options:
-
-- `name`: the name of the cache image.
 
 ## Authentication
 

@@ -49,27 +49,28 @@ output that you need.
 ### Load to image store
 
 Buildx is often used to build container images that can be loaded to an image
-store. That's where the `oci` and `docker` exporters come in. The following
-example shows how to build an image using the `oci` exporter, and have that
-image loaded to the local image store, using the `--output` option:
+store. That's where the `docker` exporter comes in. The following example shows
+how to build an image using the `docker` exporter, and have that image loaded to
+the local image store, using the `--output` option:
 
 ```console
 $ docker buildx build \
-  --output type=oci,name=<registry>/<image>,store=true .
+  --output type=docker,name=<registry>/<image> .
 ```
 
-Buildx CLI will automatically use the `oci` exporter and load it to the image
-store if you provide the `--tag` and `--load` options:
+Buildx CLI will automatically use the `docker` exporter and load it to the image
+store if you supply the `--tag` and `--load` options:
 
 ```console
 $ docker buildx build --tag <registry>/<image> --load .
 ```
 
-Images built using the
-[default `docker` Buildx driver](../../guides/drivers/docker.md) will be
-automatically loaded into the image store. This means that the images are
-available to run immediately after being built, and they'll be visible when you
-run the `docker images` command.
+Building images using the `docker` driver are automatically loaded to the local
+image store.
+
+Images loaded to the image store are available to for `docker run` immediately
+after the build finishes, and you'll see them in the list of images when you run
+the `docker images` command.
 
 ### Push to registry
 
@@ -107,7 +108,7 @@ archive file containing the corresponding image layout. The `dest` parameter
 defines the target output path for the tarball.
 
 ```console
-$ docker buildx build --output type=oci,dest=./myimage .
+$ docker buildx build --output type=oci,dest=./image.tar .
 [+] Building 0.8s (7/7) FINISHED
  ...
  => exporting to oci image format                                                                     0.0s
@@ -115,20 +116,18 @@ $ docker buildx build --output type=oci,dest=./myimage .
  => exporting manifest sha256:c1ef01a0a0ef94a7064d5cbce408075730410060e253ff8525d1e5f7e27bc900        0.0s
  => exporting config sha256:eadab326c1866dd247efb52cb715ba742bd0f05b6a205439f107cf91b3abc853          0.0s
  => sending tarball                                                                                   0.0s
-$ tar -xf ./myimage
-$ tree .
-.
-├── Dockerfile
+$ mkdir -p out && tar -C out -xf ./image.tar
+$ tree out
+out
 ├── blobs
 │   └── sha256
 │       ├── 9b18e9b68314027565b90ff6189d65942c0f7986da80df008b8431276885218e
-│       ├── c1ef01a0a0ef94a7064d5cbce408075730410060e253ff8525d1e5f7e27bc900
-│       ├── c6b4b7b7c04f702f5bd2e8f36fcfc8f006a44e27730fdff002e64f3a14cf44f3
-│       ├── eadab326c1866dd247efb52cb715ba742bd0f05b6a205439f107cf91b3abc853
-│       └── fc1975b0f6ceb6395d6cd54415454938769b46d28d376322d26cad7adca82dd2
+│       ├── c78795f3c329dbbbfb14d0d32288dea25c3cd12f31bd0213be694332a70c7f13
+│       ├── d1cf38078fa218d15715e2afcf71588ee482352d697532cf316626164699a0e2
+│       ├── e84fa1df52d2abdfac52165755d5d1c7621d74eda8e12881f6b0d38a36e01775
+│       └── fe9e23793a27fe30374308988283d40047628c73f91f577432a0d05ab0160de7
 ├── index.json
 ├── manifest.json
-├── myimage
 └── oci-layout
 ```
 
@@ -161,9 +160,9 @@ $ docker buildx build --output type=cacheonly
 ```
 
 If you don't specify an exporter, and you don't provide short-hand options like
-`--load` that automatically selects the appropriate exporter, Buildx uses the
-`cacheonly` by default. Except if you build using the `docker` driver, in which
-case you use the `image` exporter.
+`--load` that automatically selects the appropriate exporter, Buildx defaults to
+using the `cacheonly` exporter. Except if you build using the `docker` driver,
+in which case you use the `docker` exporter.
 
 Buildx logs a warning message when using `cacheonly` as a default:
 

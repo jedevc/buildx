@@ -15,22 +15,25 @@ Build a container image using the `oci` and `docker` exporters:
 
 ```console
 $ docker buildx build --output type=oci[,parameters] .
+```
+
+```console
 $ docker buildx build --output type=docker[,parameters] .
 ```
 
 The following table describes the available parameters:
 
-| Parameter           | Value                                  | Default | Description                                                                                        |
-| ------------------- | -------------------------------------- | ------- | -------------------------------------------------------------------------------------------------- |
-| `name`              | String                                 |         | Specify image name(s)                                                                              |
-| `dest`              | String                                 |         | Path                                                                                               |
-| `compression`       | `uncompressed`,`gzip`,`estargz`,`zstd` | `gzip`  | Compression type, see [compression][1]                                                             |
-| `compression-level` | `0..22`                                |         | Compression level, see [compression][1]                                                            |
-| `force-compression` | `true`,`false`                         | `false` | Forcefully apply compression, see [compression][1]                                                 |
-| `oci-mediatypes`    | `true`,`false`                         | `false` | Use OCI mediatypes in exporter manifests, see [OCI Media types][2]                                 |
-| `buildinfo`         | `true`,`false`                         | `true`  | Attach inline [build info][3]                                                                      |
-| `buildinfo-attrs`   | `true`,`false`                         | `false` | Attach inline [build info attributes][3]                                                           |
-| `annotation.<key>`  | String                                 |         | Attach an annotation with the respective `key` and `value` to the built image,see [annotations][4] |
+| Parameter           | Value                                  | Default | Description                                                                                                                           |
+| ------------------- | -------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`              | String                                 |         | Specify image name(s)                                                                                                                 |
+| `dest`              | String                                 |         | Path                                                                                                                                  |
+| `compression`       | `uncompressed`,`gzip`,`estargz`,`zstd` | `gzip`  | Compression type, see [compression][1]                                                                                                |
+| `compression-level` | `0..22`                                |         | Compression level, see [compression][1]                                                                                               |
+| `force-compression` | `true`,`false`                         | `false` | Forcefully apply compression, see [compression][1]                                                                                    |
+| `oci-mediatypes`    | `true`,`false`                         |         | Use OCI media types in exporter manifests. Defaults to `true` for `type=oci`, and `false` for `type=docker`. See [OCI Media types][2] |
+| `buildinfo`         | `true`,`false`                         | `true`  | Attach inline [build info][3]                                                                                                         |
+| `buildinfo-attrs`   | `true`,`false`                         | `false` | Attach inline [build info attributes][3]                                                                                              |
+| `annotation.<key>`  | String                                 |         | Attach an annotation with the respective `key` and `value` to the built image,see [annotations][4]                                    |
 
 [1]: index.md#cache-compression
 [2]: index.md#oci-media-types

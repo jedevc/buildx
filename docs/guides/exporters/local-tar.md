@@ -5,7 +5,7 @@ into a local directory. They're useful for producing artifacts that aren't
 container images.
 
 - `local` exports files and directories.
-- `tar` bundles the export into a tarball.
+- `tar` exports the same, but bundles the export into a tarball.
 
 ## Synopsis
 
@@ -13,6 +13,9 @@ Build a container image using the `local` exporter:
 
 ```console
 $ docker buildx build --output type=local[,parameters] .
+```
+
+```console
 $ docker buildx build --output type=tar[,parameters] .
 ```
 

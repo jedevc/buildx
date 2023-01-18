@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -13,8 +14,11 @@ import (
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/debug"
 	cliflags "github.com/docker/cli/cli/flags"
+	"github.com/docker/docker/api/types/versions"
+	"github.com/docker/docker/client"
 	"github.com/moby/buildkit/solver/errdefs"
 	"github.com/moby/buildkit/util/stack"
+	"github.com/pkg/errors"
 
 	_ "k8s.io/client-go/plugin/pkg/client/auth/azure"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
@@ -36,17 +40,34 @@ func runStandalone(cmd *command.DockerCli) error {
 	if err := cmd.Initialize(cliflags.NewClientOptions()); err != nil {
 		return err
 	}
+	if err := checkVersion(cmd.Client()); err != nil {
+		return err
+	}
 	rootCmd := commands.NewRootCmd(os.Args[0], false, cmd)
 	return rootCmd.Execute()
 }
 
 func runPlugin(cmd *command.DockerCli) error {
 	rootCmd := commands.NewRootCmd("buildx", true, cmd)
+	if err := checkVersion(cmd.Client()); err != nil {
+		return err
+	}
 	return plugin.RunPlugin(cmd, rootCmd, manager.Metadata{
 		SchemaVersion: "0.1.0",
 		Vendor:        "Docker Inc.",
 		Version:       version.Version,
 	})
+}
+
+func checkVersion(c client.APIClient) error {
+	serverVersion, err := c.ServerVersion(context.TODO())
+	if err != nil {
+		return err
+	}
+	if versions.LessThan(serverVersion.Version, version.MinDockerVersion) {
+		return errors.Errorf("buildx %s requires a Docker daemon of version %s or later", version.Version, version.MinDockerVersion)
+	}
+	return nil
 }
 
 func main() {

@@ -11,3 +11,8 @@ var (
 	// the program at linking time.
 	Revision = ""
 )
+
+const (
+	// MinDockerVersion is the minimum docker version required for buildx to work
+	MinDockerVersion = "18.09"
+)

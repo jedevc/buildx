@@ -9,7 +9,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func ParseOutputs(inp []string) ([]*controllerapi.ExportEntry, error) {
+func ParseExports(inp []string) ([]*controllerapi.ExportEntry, error) {
 	var outs []*controllerapi.ExportEntry
 	if len(inp) == 0 {
 		return nil, nil

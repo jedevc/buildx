@@ -10,7 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-func CreateOutputs(entries []*ExportEntry) ([]client.ExportEntry, error) {
+func CreateExports(entries []*ExportEntry) ([]client.ExportEntry, error) {
 	var outs []client.ExportEntry
 	if len(entries) == 0 {
 		return nil, nil

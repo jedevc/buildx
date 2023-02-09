@@ -93,12 +93,12 @@ func (o *buildOptions) toBuildOptions() (controllerapi.BuildOptions, error) {
 		Opts:           &o.CommonOptions,
 	}
 
-	opts.Contexts, err = buildflags.ParseContextNames(o.contexts)
+	opts.NamedContexts, err = buildflags.ParseContextNames(o.contexts)
 	if err != nil {
 		return controllerapi.BuildOptions{}, err
 	}
 
-	opts.Outputs, err = buildflags.ParseOutputs(o.outputs)
+	opts.Exports, err = buildflags.ParseExports(o.outputs)
 	if err != nil {
 		return controllerapi.BuildOptions{}, err
 	}

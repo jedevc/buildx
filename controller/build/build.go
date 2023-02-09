@@ -52,7 +52,7 @@ func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.Build
 	}
 
 	contexts := map[string]build.NamedContext{}
-	for name, path := range in.Contexts {
+	for name, path := range in.NamedContexts {
 		contexts[name] = build.NamedContext{Path: path}
 	}
 
@@ -108,7 +108,7 @@ func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.Build
 	}
 	opts.Session = append(opts.Session, ssh)
 
-	outputs, err := controllerapi.CreateOutputs(in.Outputs)
+	outputs, err := controllerapi.CreateExports(in.Exports)
 	if err != nil {
 		return nil, err
 	}

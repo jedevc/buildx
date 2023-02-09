@@ -1014,11 +1014,11 @@ func toBuildOpt(t *Target, inp *Input) (*build.Options, error) {
 	}
 	bo.CacheTo = controllerapi.CreateCache(cacheExports)
 
-	outputs, err := buildflags.ParseOutputs(t.Outputs)
+	outputs, err := buildflags.ParseExports(t.Outputs)
 	if err != nil {
 		return nil, err
 	}
-	bo.Exports, err = controllerapi.CreateOutputs(outputs)
+	bo.Exports, err = controllerapi.CreateExports(outputs)
 	if err != nil {
 		return nil, err
 	}

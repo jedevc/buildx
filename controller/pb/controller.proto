@@ -25,20 +25,20 @@ message BuildOptions {
   string ContextPath = 1;
   string DockerfileName = 2;
   string PrintFunc = 3;
+  map<string, string> NamedContexts = 4;
 
-  repeated string Allow = 4;
-  repeated string Attests = 5; // TODO
-  map<string, string> BuildArgs = 6;
-  repeated CacheOptionsEntry CacheFrom = 7;
-  repeated CacheOptionsEntry CacheTo = 8;
-  string CgroupParent = 9;
-  map<string, string> Contexts = 10;
-  repeated string ExtraHosts = 11;
-  string ImageIDFile = 12;
-  map<string, string> Labels = 13;
-  string NetworkMode = 14;
-  repeated string NoCacheFilter = 15;
-  repeated ExportEntry Outputs = 16;
+  repeated string Allow = 5;
+  repeated string Attests = 6; // TODO
+  map<string, string> BuildArgs = 7;
+  repeated CacheOptionsEntry CacheFrom = 8;
+  repeated CacheOptionsEntry CacheTo = 9;
+  string CgroupParent = 10;
+  repeated ExportEntry Exports = 11;
+  repeated string ExtraHosts = 12;
+  string ImageIDFile = 13;
+  map<string, string> Labels = 14;
+  string NetworkMode = 15;
+  repeated string NoCacheFilter = 16;
   repeated string Platforms = 17;
   bool Quiet = 18;
   repeated Secret Secrets = 19;
@@ -47,7 +47,7 @@ message BuildOptions {
   repeated string Tags = 22;
   string Target = 23;
   UlimitOpt Ulimits = 24;
-  // string Invoke: provided via Invoke API
+
   CommonOptions Opts = 25;
 }
 

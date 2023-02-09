@@ -69,10 +69,10 @@ func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.Build
 			InStream:       inStream,
 			NamedContexts:  contexts,
 		},
-		BuildArgs:     listToMap(in.BuildArgs, true),
+		BuildArgs:     in.BuildArgs,
 		ExtraHosts:    in.ExtraHosts,
 		ImageIDFile:   in.ImageIDFile,
-		Labels:        listToMap(in.Labels, false),
+		Labels:        in.Labels,
 		NetworkMode:   in.NetworkMode,
 		NoCache:       in.Opts.NoCache,
 		NoCacheFilter: in.NoCacheFilter,
@@ -295,26 +295,6 @@ func printWarnings(w io.Writer, warnings []client.VertexWarning, mode string) {
 		fmt.Fprintf(w, "\n")
 
 	}
-}
-
-func listToMap(values []string, defaultEnv bool) map[string]string {
-	result := make(map[string]string, len(values))
-	for _, value := range values {
-		kv := strings.SplitN(value, "=", 2)
-		if len(kv) == 1 {
-			if defaultEnv {
-				v, ok := os.LookupEnv(kv[0])
-				if ok {
-					result[kv[0]] = v
-				}
-			} else {
-				result[kv[0]] = ""
-			}
-		} else {
-			result[kv[0]] = kv[1]
-		}
-	}
-	return result
 }
 
 func parseContextNames(values []string) (map[string]build.NamedContext, error) {

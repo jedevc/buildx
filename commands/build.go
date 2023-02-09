@@ -77,7 +77,6 @@ func (o *buildOptions) toBuildOptions() (controllerapi.BuildOptions, error) {
 		BuildArgs:      listToMap(o.buildArgs, true),
 		CgroupParent:   o.cgroupParent,
 		ContextPath:    o.contextPath,
-		Contexts:       o.contexts,
 		DockerfileName: o.dockerfileName,
 		ExtraHosts:     o.extraHosts,
 		ImageIDFile:    o.imageIDFile,
@@ -94,6 +93,11 @@ func (o *buildOptions) toBuildOptions() (controllerapi.BuildOptions, error) {
 		Target:         o.target,
 		Ulimits:        dockerUlimitToControllerUlimit(o.ulimits),
 		Opts:           &o.CommonOptions,
+	}
+
+	opts.Contexts, err = buildflags.ParseContextNames(o.contexts)
+	if err != nil {
+		return controllerapi.BuildOptions{}, err
 	}
 
 	opts.Outputs, err = buildflags.ParseOutputs(o.outputs)

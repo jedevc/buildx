@@ -32,7 +32,7 @@ message BuildOptions {
   repeated CacheOptionsEntry CacheFrom = 7;
   repeated CacheOptionsEntry CacheTo = 8;
   string CgroupParent = 9;
-  repeated string Contexts = 10;
+  map<string, string> Contexts = 10;
   repeated string ExtraHosts = 11;
   string ImageIDFile = 12;
   map<string, string> Labels = 13;

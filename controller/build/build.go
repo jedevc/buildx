@@ -26,7 +26,6 @@ import (
 	"github.com/docker/cli/cli/command"
 	"github.com/docker/cli/cli/config"
 	dockeropts "github.com/docker/cli/opts"
-	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/pkg/ioutils"
 	"github.com/docker/go-units"
 	"github.com/moby/buildkit/client"
@@ -52,9 +51,9 @@ func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.Build
 		progressMode = "quiet"
 	}
 
-	contexts, err := parseContextNames(in.Contexts)
-	if err != nil {
-		return nil, err
+	contexts := map[string]build.NamedContext{}
+	for name, path := range in.Contexts {
+		contexts[name] = build.NamedContext{Path: path}
 	}
 
 	printFunc, err := parsePrintFunc(in.PrintFunc)
@@ -286,26 +285,6 @@ func printWarnings(w io.Writer, warnings []client.VertexWarning, mode string) {
 		fmt.Fprintf(w, "\n")
 
 	}
-}
-
-func parseContextNames(values []string) (map[string]build.NamedContext, error) {
-	if len(values) == 0 {
-		return nil, nil
-	}
-	result := make(map[string]build.NamedContext, len(values))
-	for _, value := range values {
-		kv := strings.SplitN(value, "=", 2)
-		if len(kv) != 2 {
-			return nil, errors.Errorf("invalid context value: %s, expected key=value", value)
-		}
-		named, err := reference.ParseNormalizedNamed(kv[0])
-		if err != nil {
-			return nil, errors.Wrapf(err, "invalid context name %s", kv[0])
-		}
-		name := strings.TrimSuffix(reference.FamiliarString(named), ":latest")
-		result[name] = build.NamedContext{Path: kv[1]}
-	}
-	return result, nil
 }
 
 func parsePrintFunc(str string) (*build.PrintFunc, error) {

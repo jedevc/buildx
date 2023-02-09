@@ -109,7 +109,7 @@ func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.Build
 	}
 	opts.Session = append(opts.Session, ssh)
 
-	outputs, err := buildflags.ParseOutputs(in.Outputs)
+	outputs, err := controllerapi.CreateOutputs(in.Outputs)
 	if err != nil {
 		return nil, err
 	}
@@ -161,17 +161,8 @@ func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.Build
 		return nil, err
 	}
 
-	cacheImports, err := buildflags.ParseCacheEntry(in.CacheFrom)
-	if err != nil {
-		return nil, err
-	}
-	opts.CacheFrom = cacheImports
-
-	cacheExports, err := buildflags.ParseCacheEntry(in.CacheTo)
-	if err != nil {
-		return nil, err
-	}
-	opts.CacheTo = cacheExports
+	opts.CacheFrom = controllerapi.CreateCache(in.CacheFrom)
+	opts.CacheTo = controllerapi.CreateCache(in.CacheTo)
 
 	allow, err := buildflags.ParseEntitlements(in.Allow)
 	if err != nil {

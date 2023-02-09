@@ -29,8 +29,8 @@ message BuildOptions {
   repeated string Allow = 4;
   repeated string Attests = 5; // TODO
   map<string, string> BuildArgs = 6;
-  repeated string CacheFrom = 7;
-  repeated string CacheTo = 8;
+  repeated CacheOptionsEntry CacheFrom = 7;
+  repeated CacheOptionsEntry CacheTo = 8;
   string CgroupParent = 9;
   repeated string Contexts = 10;
   repeated string ExtraHosts = 11;
@@ -38,7 +38,7 @@ message BuildOptions {
   map<string, string> Labels = 13;
   string NetworkMode = 14;
   repeated string NoCacheFilter = 15;
-  repeated string Outputs = 16;
+  repeated ExportEntry Outputs = 16;
   repeated string Platforms = 17;
   bool Quiet = 18;
   repeated string Secrets = 19;
@@ -49,6 +49,17 @@ message BuildOptions {
   UlimitOpt Ulimits = 24;
   // string Invoke: provided via Invoke API
   CommonOptions Opts = 25;
+}
+
+message ExportEntry {
+  string Type = 1;
+  map<string, string> Attrs = 2;
+  string Destination = 3;
+}
+
+message CacheOptionsEntry {
+  string Type = 1;
+  map<string, string> Attrs = 2;
 }
 
 message UlimitOpt {

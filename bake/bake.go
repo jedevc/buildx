@@ -14,6 +14,7 @@ import (
 
 	"github.com/docker/buildx/bake/hclparser"
 	"github.com/docker/buildx/build"
+	controllerapi "github.com/docker/buildx/controller/pb"
 	"github.com/docker/buildx/util/buildflags"
 	"github.com/docker/buildx/util/platformutil"
 	"github.com/docker/cli/cli/config"
@@ -998,19 +999,22 @@ func toBuildOpt(t *Target, inp *Input) (*build.Options, error) {
 	if err != nil {
 		return nil, err
 	}
-	bo.CacheFrom = cacheImports
+	bo.CacheFrom = controllerapi.CreateCache(cacheImports)
 
 	cacheExports, err := buildflags.ParseCacheEntry(t.CacheTo)
 	if err != nil {
 		return nil, err
 	}
-	bo.CacheTo = cacheExports
+	bo.CacheTo = controllerapi.CreateCache(cacheExports)
 
 	outputs, err := buildflags.ParseOutputs(t.Outputs)
 	if err != nil {
 		return nil, err
 	}
-	bo.Exports = outputs
+	bo.Exports, err = controllerapi.CreateOutputs(outputs)
+	if err != nil {
+		return nil, err
+	}
 
 	attests, err := buildflags.ParseAttests(t.Attest)
 	if err != nil {

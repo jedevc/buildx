@@ -19,6 +19,7 @@ import (
 	"github.com/docker/buildx/monitor"
 	"github.com/docker/buildx/store"
 	"github.com/docker/buildx/store/storeutil"
+	"github.com/docker/buildx/util/buildflags"
 	"github.com/docker/buildx/util/ioset"
 	"github.com/docker/buildx/util/tracing"
 	"github.com/docker/cli-docs-tool/annotation"
@@ -68,13 +69,12 @@ type buildOptions struct {
 	control.ControlOptions
 }
 
-func (o *buildOptions) toBuildOptions() controllerapi.BuildOptions {
-	return controllerapi.BuildOptions{
+func (o *buildOptions) toBuildOptions() (controllerapi.BuildOptions, error) {
+	var err error
+	opts := controllerapi.BuildOptions{
 		Allow:          o.allow,
 		Attests:        o.attests,
 		BuildArgs:      listToMap(o.buildArgs, true),
-		CacheFrom:      o.cacheFrom,
-		CacheTo:        o.cacheTo,
 		CgroupParent:   o.cgroupParent,
 		ContextPath:    o.contextPath,
 		Contexts:       o.contexts,
@@ -84,7 +84,6 @@ func (o *buildOptions) toBuildOptions() controllerapi.BuildOptions {
 		Labels:         listToMap(o.labels, false),
 		NetworkMode:    o.networkMode,
 		NoCacheFilter:  o.noCacheFilter,
-		Outputs:        o.outputs,
 		Platforms:      o.platforms,
 		PrintFunc:      o.printFunc,
 		Quiet:          o.quiet,
@@ -96,6 +95,22 @@ func (o *buildOptions) toBuildOptions() controllerapi.BuildOptions {
 		Ulimits:        dockerUlimitToControllerUlimit(o.ulimits),
 		Opts:           &o.CommonOptions,
 	}
+
+	opts.Outputs, err = buildflags.ParseOutputs(o.outputs)
+	if err != nil {
+		return controllerapi.BuildOptions{}, err
+	}
+
+	opts.CacheFrom, err = buildflags.ParseCacheEntry(o.cacheFrom)
+	if err != nil {
+		return controllerapi.BuildOptions{}, err
+	}
+	opts.CacheTo, err = buildflags.ParseCacheEntry(o.cacheTo)
+	if err != nil {
+		return controllerapi.BuildOptions{}, err
+	}
+
+	return opts, nil
 }
 
 func listToMap(values []string, defaultEnv bool) map[string]string {
@@ -129,7 +144,11 @@ func runBuild(dockerCli command.Cli, in buildOptions) error {
 		end(err)
 	}()
 
-	_, err = cbuild.RunBuild(ctx, dockerCli, in.toBuildOptions(), os.Stdin, in.progress, nil)
+	opts, err := in.toBuildOptions()
+	if err != nil {
+		return err
+	}
+	_, err = cbuild.RunBuild(ctx, dockerCli, opts, os.Stdin, in.progress, nil)
 	return err
 }
 
@@ -431,7 +450,11 @@ func launchControllerAndRunBuild(dockerCli command.Cli, options buildOptions) er
 	f.SetReader(os.Stdin)
 
 	// Start build
-	ref, err := c.Build(ctx, options.toBuildOptions(), pr, os.Stdout, os.Stderr, options.progress)
+	opts, err := options.toBuildOptions()
+	if err != nil {
+		return err
+	}
+	ref, err := c.Build(ctx, opts, pr, os.Stdout, os.Stderr, options.progress)
 	if err != nil {
 		return errors.Wrapf(err, "failed to build") // TODO: allow invoke even on error
 	}
@@ -456,7 +479,7 @@ func launchControllerAndRunBuild(dockerCli command.Cli, options buildOptions) er
 			}
 			return errors.Errorf("failed to configure terminal: %v", err)
 		}
-		err = monitor.RunMonitor(ctx, ref, options.toBuildOptions(), invokeConfig, c, options.progress, pr2, os.Stdout, os.Stderr)
+		err = monitor.RunMonitor(ctx, ref, opts, invokeConfig, c, options.progress, pr2, os.Stdout, os.Stderr)
 		con.Reset()
 		if err := pw2.Close(); err != nil {
 			logrus.Debug("failed to close monitor stdin pipe reader")

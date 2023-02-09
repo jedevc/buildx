@@ -88,7 +88,6 @@ func (o *buildOptions) toBuildOptions() (controllerapi.BuildOptions, error) {
 		Quiet:          o.quiet,
 		Secrets:        o.secrets,
 		ShmSize:        int64(o.shmSize),
-		SSH:            o.ssh,
 		Tags:           o.tags,
 		Target:         o.target,
 		Ulimits:        dockerUlimitToControllerUlimit(o.ulimits),
@@ -110,6 +109,11 @@ func (o *buildOptions) toBuildOptions() (controllerapi.BuildOptions, error) {
 		return controllerapi.BuildOptions{}, err
 	}
 	opts.CacheTo, err = buildflags.ParseCacheEntry(o.cacheTo)
+	if err != nil {
+		return controllerapi.BuildOptions{}, err
+	}
+
+	opts.SSH, err = buildflags.ParseSSHSpecs(o.ssh)
 	if err != nil {
 		return controllerapi.BuildOptions{}, err
 	}

@@ -981,15 +981,18 @@ func toBuildOpt(t *Target, inp *Input) (*build.Options, error) {
 	}
 	bo.Session = append(bo.Session, secrets)
 
-	sshSpecs := t.SSH
-	if len(sshSpecs) == 0 && buildflags.IsGitSSH(contextPath) {
-		sshSpecs = []string{"default"}
-	}
-	ssh, err := buildflags.ParseSSHSpecs(sshSpecs)
+	sshSpecs, err := buildflags.ParseSSHSpecs(t.SSH)
 	if err != nil {
 		return nil, err
 	}
-	bo.Session = append(bo.Session, ssh)
+	if len(sshSpecs) == 0 && buildflags.IsGitSSH(contextPath) {
+		sshSpecs = append(sshSpecs, &controllerapi.SSH{ID: "default"})
+	}
+	sshAttachment, err := controllerapi.CreateSSH(sshSpecs)
+	if err != nil {
+		return nil, err
+	}
+	bo.Session = append(bo.Session, sshAttachment)
 
 	if t.Target != nil {
 		bo.Target = *t.Target

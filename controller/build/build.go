@@ -100,9 +100,9 @@ func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.Build
 
 	sshSpecs := in.SSH
 	if len(sshSpecs) == 0 && buildflags.IsGitSSH(in.ContextPath) {
-		sshSpecs = []string{"default"}
+		sshSpecs = append(sshSpecs, &controllerapi.SSH{ID: "default"})
 	}
-	ssh, err := buildflags.ParseSSHSpecs(sshSpecs)
+	ssh, err := controllerapi.CreateSSH(sshSpecs)
 	if err != nil {
 		return nil, err
 	}

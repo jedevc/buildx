@@ -43,7 +43,7 @@ message BuildOptions {
   bool Quiet = 18;
   repeated string Secrets = 19;
   int64 ShmSize = 20;
-  repeated string SSH = 21;
+  repeated SSH SSH = 21;
   repeated string Tags = 22;
   string Target = 23;
   UlimitOpt Ulimits = 24;
@@ -60,6 +60,11 @@ message ExportEntry {
 message CacheOptionsEntry {
   string Type = 1;
   map<string, string> Attrs = 2;
+}
+
+message SSH {
+  string ID = 1;
+  repeated string Paths = 2;
 }
 
 message UlimitOpt {

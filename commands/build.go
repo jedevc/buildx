@@ -86,7 +86,6 @@ func (o *buildOptions) toBuildOptions() (controllerapi.BuildOptions, error) {
 		Platforms:      o.platforms,
 		PrintFunc:      o.printFunc,
 		Quiet:          o.quiet,
-		Secrets:        o.secrets,
 		ShmSize:        int64(o.shmSize),
 		Tags:           o.tags,
 		Target:         o.target,
@@ -113,6 +112,10 @@ func (o *buildOptions) toBuildOptions() (controllerapi.BuildOptions, error) {
 		return controllerapi.BuildOptions{}, err
 	}
 
+	opts.Secrets, err = buildflags.ParseSecretSpecs(o.secrets)
+	if err != nil {
+		return controllerapi.BuildOptions{}, err
+	}
 	opts.SSH, err = buildflags.ParseSSHSpecs(o.ssh)
 	if err != nil {
 		return controllerapi.BuildOptions{}, err

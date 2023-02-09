@@ -979,7 +979,11 @@ func toBuildOpt(t *Target, inp *Input) (*build.Options, error) {
 	if err != nil {
 		return nil, err
 	}
-	bo.Session = append(bo.Session, secrets)
+	secretAttachment, err := controllerapi.CreateSecrets(secrets)
+	if err != nil {
+		return nil, err
+	}
+	bo.Session = append(bo.Session, secretAttachment)
 
 	sshSpecs, err := buildflags.ParseSSHSpecs(t.SSH)
 	if err != nil {

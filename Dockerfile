@@ -1,5 +1,3 @@
-# syntax=docker/dockerfile:1
-
 ARG GO_VERSION=1.20
 ARG XX_VERSION=1.1.2
 ARG DOCKERD_VERSION=20.10.14

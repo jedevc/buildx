@@ -3,6 +3,7 @@ package remote
 import (
 	"context"
 	"io"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -11,6 +12,7 @@ import (
 	"github.com/docker/buildx/controller/pb"
 	"github.com/docker/buildx/controller/processes"
 	"github.com/docker/buildx/util/ioset"
+	"github.com/docker/buildx/util/progress"
 	"github.com/docker/buildx/version"
 	controlapi "github.com/moby/buildkit/api/services/control"
 	"github.com/moby/buildkit/client"
@@ -18,7 +20,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type BuildFunc func(ctx context.Context, options *pb.BuildOptions, stdin io.Reader, statusChan chan *client.SolveStatus) (resp *client.SolveResponse, res *build.ResultContext, err error)
+type BuildFunc func(ctx context.Context, options *pb.BuildOptions, stdin io.Reader, progress progress.Writer) (resp *client.SolveResponse, res *build.ResultContext, err error)
 
 func NewServer(buildFunc BuildFunc) *Server {
 	return &Server{
@@ -155,6 +157,7 @@ func (m *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 		s = &session{}
 		s.buildOnGoing.Store(true)
 	}
+
 	s.processes = processes.NewManager()
 	statusChan := make(chan *client.SolveStatus)
 	s.statusChan = statusChan
@@ -174,10 +177,22 @@ func (m *Server) Build(ctx context.Context, req *pb.BuildRequest) (*pb.BuildResp
 		m.sessionMu.Unlock()
 	}()
 
+	// Create a dummy progress writer
+	// FIXME: implement a networked progress.Writer
+	devnull, err := os.Open(os.DevNull)
+	if err != nil {
+		return nil, err
+	}
+	defer devnull.Close()
+	pw, err := progress.NewPrinter(ctx, devnull, devnull, "quiet")
+	if err != nil {
+		return nil, err
+	}
+
 	// Build the specified request
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	resp, res, err := m.buildFunc(ctx, req.Options, inR, statusChan)
+	resp, res, err := m.buildFunc(ctx, req.Options, inR, progress.Tee(pw, statusChan))
 	m.sessionMu.Lock()
 	if s, ok := m.session[ref]; ok {
 		s.result = res

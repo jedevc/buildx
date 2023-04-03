@@ -186,7 +186,7 @@ func runBuild(dockerCli command.Cli, in buildOptions) error {
 	if err != nil {
 		return err
 	}
-	progress, err := in.toProgress()
+	progressMode, err := in.toProgress()
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,8 @@ func runBuild(dockerCli command.Cli, in buildOptions) error {
 			return errors.Wrap(err, "removing image ID file")
 		}
 	}
-	resp, _, err := cbuild.RunBuild(ctx, dockerCli, opts, os.Stdin, progress, nil)
+	printer, err := progress.NewPrinter(context.TODO(), os.Stderr, os.Stderr, progressMode)
+	resp, _, err := cbuild.RunBuild(ctx, dockerCli, opts, os.Stdin, printer)
 	if err != nil {
 		return err
 	}
@@ -510,7 +511,7 @@ func launchControllerAndRunBuild(dockerCli command.Cli, options buildOptions) er
 	if err != nil {
 		return err
 	}
-	progress, err := options.toProgress()
+	progressMode, err := options.toProgress()
 	if err != nil {
 		return err
 	}
@@ -530,7 +531,11 @@ func launchControllerAndRunBuild(dockerCli command.Cli, options buildOptions) er
 		return err
 	}
 	opts = *optsP
-	ref, resp, err := c.Build(ctx, opts, pr, os.Stdout, os.Stderr, progress)
+	printer, err := progress.NewPrinter(context.TODO(), os.Stderr, os.Stderr, progressMode)
+	if err != nil {
+		return err
+	}
+	ref, resp, err := c.Build(ctx, opts, pr, printer)
 	if err != nil {
 		return errors.Wrapf(err, "failed to build") // TODO: allow invoke even on error
 	}
@@ -566,7 +571,7 @@ func launchControllerAndRunBuild(dockerCli command.Cli, options buildOptions) er
 			}
 			return errors.Errorf("failed to configure terminal: %v", err)
 		}
-		err = monitor.RunMonitor(ctx, ref, opts, invokeConfig, c, options.progress, pr2, os.Stdout, os.Stderr)
+		err = monitor.RunMonitor(ctx, ref, opts, invokeConfig, c, pr2, os.Stdout, os.Stderr, printer)
 		con.Reset()
 		if err := pw2.Close(); err != nil {
 			logrus.Debug("failed to close monitor stdin pipe reader")

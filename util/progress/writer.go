@@ -12,6 +12,7 @@ type Writer interface {
 	Write(*client.SolveStatus)
 	ValidateLogSource(digest.Digest, interface{}) bool
 	ClearLogSource(interface{})
+	Wait() error
 }
 
 func Write(w Writer, name string, f func() error) {

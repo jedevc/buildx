@@ -32,7 +32,6 @@ import (
 	"github.com/moby/buildkit/session/auth/authprovider"
 	"github.com/moby/buildkit/solver/errdefs"
 	"github.com/moby/buildkit/util/grpcerrors"
-	"github.com/moby/buildkit/util/progress/progressui"
 	"github.com/morikuni/aec"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -41,7 +40,7 @@ import (
 
 const defaultTargetName = "default"
 
-func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.BuildOptions, inStream io.Reader, progressMode string, statusChan chan *client.SolveStatus) (*client.SolveResponse, *build.ResultContext, error) {
+func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.BuildOptions, inStream io.Reader, progress progress.Writer) (*client.SolveResponse, *build.ResultContext, error) {
 	if in.Opts.NoCache && len(in.NoCacheFilter) > 0 {
 		return nil, nil, errors.Errorf("--no-cache and --no-cache-filter cannot currently be used together")
 	}
@@ -174,7 +173,7 @@ func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.Build
 		return nil, nil, err
 	}
 
-	resp, res, err := buildTargets(ctx, dockerCli, b.NodeGroup, nodes, map[string]build.Options{defaultTargetName: opts}, progressMode, in.Opts.MetadataFile, statusChan)
+	resp, res, err := buildTargets(ctx, dockerCli, b.NodeGroup, nodes, map[string]build.Options{defaultTargetName: opts}, progress, in.Opts.MetadataFile)
 	err = wrapBuildError(err, false)
 	if err != nil {
 		return nil, nil, err
@@ -182,29 +181,28 @@ func RunBuild(ctx context.Context, dockerCli command.Cli, in controllerapi.Build
 	return resp, res, nil
 }
 
-func buildTargets(ctx context.Context, dockerCli command.Cli, ng *store.NodeGroup, nodes []builder.Node, opts map[string]build.Options, progressMode string, metadataFile string, statusChan chan *client.SolveStatus) (*client.SolveResponse, *build.ResultContext, error) {
-	ctx2, cancel := context.WithCancel(context.TODO())
-	defer cancel()
-
-	printer, err := progress.NewPrinter(ctx2, os.Stderr, os.Stderr, progressMode, progressui.WithDesc(
-		fmt.Sprintf("building with %q instance using %s driver", ng.Name, ng.Driver),
-		fmt.Sprintf("%s:%s", ng.Driver, ng.Name),
-	))
-	if err != nil {
-		return nil, nil, err
-	}
+func buildTargets(ctx context.Context, dockerCli command.Cli, ng *store.NodeGroup, nodes []builder.Node, opts map[string]build.Options, progress progress.Writer, metadataFile string) (*client.SolveResponse, *build.ResultContext, error) {
+	// ctx2, cancel := context.WithCancel(context.TODO())
+	// defer cancel()
+	// printer, err := progress.NewPrinter(ctx2, os.Stderr, os.Stderr, progressMode, progressui.WithDesc(
+	// 	fmt.Sprintf("building with %q instance using %s driver", ng.Name, ng.Driver),
+	// 	fmt.Sprintf("%s:%s", ng.Driver, ng.Name),
+	// ))
+	// if err != nil {
+	// 	return nil, nil, err
+	// }
 
 	var res *build.ResultContext
 	var mu sync.Mutex
 	var idx int
-	resp, err := build.BuildWithResultHandler(ctx, nodes, opts, dockerutil.NewClient(dockerCli), confutil.ConfigDir(dockerCli), progress.Tee(printer, statusChan), func(driverIndex int, gotRes *build.ResultContext) {
+	resp, err := build.BuildWithResultHandler(ctx, nodes, opts, dockerutil.NewClient(dockerCli), confutil.ConfigDir(dockerCli), progress, func(driverIndex int, gotRes *build.ResultContext) {
 		mu.Lock()
 		defer mu.Unlock()
 		if res == nil || driverIndex < idx {
 			idx, res = driverIndex, gotRes
 		}
 	})
-	err1 := printer.Wait()
+	err1 := progress.Wait()
 	if err == nil {
 		err = err1
 	}
@@ -218,7 +216,7 @@ func buildTargets(ctx context.Context, dockerCli command.Cli, ng *store.NodeGrou
 		}
 	}
 
-	printWarnings(os.Stderr, printer.Warnings(), progressMode)
+	// printWarnings(os.Stderr, printer.Warnings(), progressMode)
 
 	for k := range resp {
 		if opts[k].PrintFunc != nil {

@@ -225,10 +225,16 @@ func runBuild(dockerCli command.Cli, options buildOptions) (err error) {
 	if err != nil {
 		return err
 	}
-	printer, err := progress.NewPrinter(ctx2, os.Stderr, os.Stderr, progressMode, progressui.WithDesc(
-		fmt.Sprintf("building with %q instance using %s driver", b.Name, b.Driver),
-		fmt.Sprintf("%s:%s", b.Driver, b.Name),
-	))
+	var printer *progress.Printer
+	printer, err = progress.NewPrinter(ctx2, os.Stderr, os.Stderr, progressMode,
+		progressui.WithDesc(
+			fmt.Sprintf("building with %q instance using %s driver", b.Name, b.Driver),
+			fmt.Sprintf("%s:%s", b.Driver, b.Name),
+		),
+		progressui.WithOnDone(func(warnings []client.VertexWarning, err error) {
+			printWarnings(os.Stderr, warnings, progressMode)
+		}),
+	)
 	if err != nil {
 		return err
 	}
@@ -244,7 +250,6 @@ func runBuild(dockerCli command.Cli, options buildOptions) (err error) {
 	if err := printer.Wait(); retErr == nil {
 		retErr = err
 	}
-	printWarnings(os.Stderr, printer.Warnings(), progressMode)
 	if retErr != nil {
 		return retErr
 	}

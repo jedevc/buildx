@@ -25,7 +25,11 @@ type displaySolveStatusOpts struct {
 	phase       string
 	textDesc    string
 	consoleDesc string
+
+	onDone doneFunc
 }
+
+type doneFunc func(warnings []client.VertexWarning, err error)
 
 type DisplaySolveStatusOpt func(b *displaySolveStatusOpts)
 
@@ -42,7 +46,13 @@ func WithDesc(text string, console string) DisplaySolveStatusOpt {
 	}
 }
 
-func DisplaySolveStatus(ctx context.Context, c console.Console, w io.Writer, ch chan *client.SolveStatus, opts ...DisplaySolveStatusOpt) ([]client.VertexWarning, error) {
+func WithOnDone(onDone doneFunc) DisplaySolveStatusOpt {
+	return func(b *displaySolveStatusOpts) {
+		b.onDone = onDone
+	}
+}
+
+func DisplaySolveStatus(ctx context.Context, c console.Console, w io.Writer, ch chan *client.SolveStatus, opts ...DisplaySolveStatusOpt) (warnings []client.VertexWarning, err error) {
 	modeConsole := c != nil
 
 	dsso := &displaySolveStatusOpts{}
@@ -77,6 +87,12 @@ func DisplaySolveStatus(ctx context.Context, c console.Console, w io.Writer, ch 
 	}()
 
 	displayLimiter := rate.NewLimiter(rate.Every(displayTimeout), 1)
+
+	if dsso.onDone != nil {
+		defer func() {
+			dsso.onDone(warnings, err)
+		}()
+	}
 
 	var height int
 	width, _ := disp.getSize()

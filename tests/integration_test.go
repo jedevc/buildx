@@ -15,12 +15,11 @@ func init() {
 func TestIntegration(t *testing.T) {
 	testIntegration(
 		t,
-		testBuild,
-		testInspect,
+		buildTests,
 	)
 }
 
-func testIntegration(t *testing.T, funcs ...func(t *testing.T, sb integration.Sandbox)) {
+func testIntegration(t *testing.T, funcs ...[]func(t *testing.T, sb integration.Sandbox)) {
 	mirroredImages := integration.OfficialImages("busybox:latest", "alpine:latest")
 	mirrors := integration.WithMirroredImages(mirroredImages)
 

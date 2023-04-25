@@ -17,19 +17,24 @@ func inspect(sb integration.Sandbox, args ...string) (string, error) {
 	return string(out), err
 }
 
+var inspectTests = []func(t *testing.T, sb integration.Sandbox){
+	testInspect,
+}
+
 func testInspect(t *testing.T, sb integration.Sandbox) {
 	out, err := inspect(sb)
 	require.NoError(t, err, string(out))
 
 	var name string
+	var driver string
 	for _, line := range strings.Split(out, "\n") {
-		var ok bool
-		name, ok = strings.CutPrefix(line, "Name:")
-		if !ok {
-			continue
+		if v, ok := strings.CutPrefix(line, "Name:"); ok {
+			name = strings.TrimSpace(v)
 		}
-		name = strings.TrimSpace(name)
-		break
+		if v, ok := strings.CutPrefix(line, "Driver:"); ok {
+			driver = strings.TrimSpace(v)
+		}
 	}
 	require.Equal(t, sb.Address(), name)
+	require.Equal(t, sb.Name(), driver)
 }

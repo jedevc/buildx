@@ -31,7 +31,7 @@ var buildTests = []func(t *testing.T, sb integration.Sandbox){
 
 func testBuild(t *testing.T, sb integration.Sandbox) {
 	dir := createExample(t)
-	out, err := build(sb, "--output=type=cache-only", dir)
+	out, err := build(sb, dir)
 	require.NoError(t, err, string(out))
 }
 
@@ -56,7 +56,7 @@ func testBuildTarExport(t *testing.T, sb integration.Sandbox) {
 	require.NoError(t, err)
 
 	require.Contains(t, m, "bar")
-	require.Equal(t, "foo", m["bar"])
+	require.Equal(t, "foo", string(m["bar"].Data))
 }
 
 func testBuildRegistryExport(t *testing.T, sb integration.Sandbox) {
@@ -67,15 +67,17 @@ func testBuildRegistryExport(t *testing.T, sb integration.Sandbox) {
 		t.Skip(err.Error())
 	}
 	require.NoError(t, err)
-	target := registry + "/buildx/build-registry-export:latest"
+	target := registry + "/buildx/registry:latest"
 
 	out, err := build(sb, fmt.Sprintf("--output=type=image,name=%s,push=true", target), dir)
 	require.NoError(t, err, string(out))
 
 	desc, provider, err := contentutil.ProviderFromRef(target)
 	require.NoError(t, err)
-	imgs, err := testutil.ReadImage(sb.Context(), provider, desc)
+	imgs, err := testutil.ReadImages(sb.Context(), provider, desc)
 	require.NoError(t, err)
+
+	_ = imgs
 }
 
 func createExample(t *testing.T) string {

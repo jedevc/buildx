@@ -46,9 +46,8 @@ if ! docker container inspect "$cacheVolume" >/dev/null 2>/dev/null; then
 fi
 
 if [ "$TEST_INTEGRATION" == 1 ]; then
-  socket=$(docker context inspect -f "{{.Endpoints.docker.Host}}")
-  cid=$(docker create --rm -v ${socket#unix://}:/var/run/docker.sock -v /tmp $testReportsVol --volumes-from=$cacheVolume -e SKIP_INTEGRATION_TESTS -e GOTESTSUM_FORMAT -e BUILDKIT_REGISTRY_MIRROR_DIR=/root/.cache/registry --privileged $iid gotestsum $gotestsumArgs --packages="${TESTPKGS:-./...}" -- $gotestArgs ${TESTFLAGS:--v})
-  docker start -a $cid
+  cid=$(docker create --rm -v /tmp $testReportsVol --volumes-from=$cacheVolume -e SKIP_INTEGRATION_TESTS -e GOTESTSUM_FORMAT -e BUILDKIT_REGISTRY_MIRROR_DIR=/root/.cache/registry --privileged $iid sh -c "(dockerd &> /var/log/dockerd.log &) && gotestsum $gotestsumArgs --packages=\"${TESTPKGS:-./...}\" -- $gotestArgs ${TESTFLAGS:--v}")
+  docker start -a -i $cid
 fi
 
 if [ "$TEST_KEEP_CACHE" != "1" ]; then

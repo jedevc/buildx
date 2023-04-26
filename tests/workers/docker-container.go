@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 
+	"github.com/moby/buildkit/cmd/buildkitd/config"
 	"github.com/moby/buildkit/identity"
 	"github.com/moby/buildkit/util/testutil/integration"
 	"github.com/pkg/errors"
@@ -17,7 +18,7 @@ func InitContainerWorker() {
 type containerWorker struct{}
 
 func (w *containerWorker) Name() string {
-	return "container"
+	return "docker-container"
 }
 
 func (w *containerWorker) Rootless() bool {
@@ -25,14 +26,30 @@ func (w *containerWorker) Rootless() bool {
 }
 
 func (w *containerWorker) New(ctx context.Context, cfg *integration.BackendConfig) (integration.Backend, func() error, error) {
-	config, err := os.CreateTemp("", "buildkit.config.toml")
+	bkcfg, err := config.LoadFile(cfg.ConfigFile)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "failed to load buildkit config file %s", cfg.ConfigFile)
+	}
+	image := "moby/buildkit:latest"
+	if reg, ok := bkcfg.Registries["docker.io"]; ok && len(reg.Mirrors) > 0 {
+		image = reg.Mirrors[0] + "/moby/buildkit:latest"
+	}
+
+	cfgfile, err := os.CreateTemp("", "buildkit.config.toml")
 	if err != nil {
 		return nil, nil, err
 	}
 
 	name := "container" + identity.NewID()
 
-	cmd := exec.Command("buildx", "create", "--bootstrap", "--name="+name, "--driver=docker-container", "--config="+config.Name())
+	cmd := exec.Command("buildx", "create",
+		"--bootstrap",
+		"--name="+name,
+		"--config="+cfgfile.Name(),
+		"--driver=docker-container",
+		"--driver-opt=network=host",
+		"--driver-opt=image="+image,
+	)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	err = cmd.Run()
@@ -45,7 +62,7 @@ func (w *containerWorker) New(ctx context.Context, cfg *integration.BackendConfi
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
-		if err1 := os.Remove(config.Name()); err1 != nil && err == nil {
+		if err1 := os.Remove(cfgfile.Name()); err1 != nil && err == nil {
 			return errors.Wrapf(err, "failed to remove config for buildx instance %s", name)
 		}
 		return errors.Wrapf(err, "failed to remove buildx instance %s", name)

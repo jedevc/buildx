@@ -76,6 +76,7 @@ FROM binaries-$TARGETOS AS binaries
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
 FROM gobase as integration-test
+RUN apk add docker
 COPY --link --from=gotestsum /out/gotestsum /usr/bin/
 COPY --link --from=registry /bin/registry /usr/bin/
 COPY --link --from=buildkit /usr/bin/buildkitd /usr/bin/

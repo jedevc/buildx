@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/containerd/containerd/content"
+	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/gofrs/flock"
 	"github.com/moby/buildkit/util/appcontext"
@@ -253,7 +254,8 @@ func copyImagesLocal(t *testing.T, host string, images map[string]string) error 
 		if err != nil {
 			return err
 		}
-		if err := contentutil.CopyChain(context.TODO(), ingester, provider, desc); err != nil {
+		ctx := remotes.WithMediaTypeKeyPrefix(context.TODO(), "application/vnd.in-toto+json", "intoto")
+		if err := contentutil.CopyChain(ctx, ingester, provider, desc); err != nil {
 			return err
 		}
 		t.Logf("copied %s to local mirror %s", from, host+"/"+to)

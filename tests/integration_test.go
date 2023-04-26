@@ -9,18 +9,19 @@ import (
 )
 
 func init() {
+	workers.InitDockerWorker()
 	workers.InitContainerWorker()
 }
 
 func TestIntegration(t *testing.T) {
-	testIntegration(
-		t,
-		buildTests,
-	)
+	var tests []func(t *testing.T, sb integration.Sandbox)
+	tests = append(tests, buildTests...)
+	testIntegration(t, tests...)
 }
 
-func testIntegration(t *testing.T, funcs ...[]func(t *testing.T, sb integration.Sandbox)) {
+func testIntegration(t *testing.T, funcs ...func(t *testing.T, sb integration.Sandbox)) {
 	mirroredImages := integration.OfficialImages("busybox:latest", "alpine:latest")
+	mirroredImages["moby/buildkit:latest"] = "docker.io/moby/buildkit:latest"
 	mirrors := integration.WithMirroredImages(mirroredImages)
 
 	tests := integration.TestFuncs(funcs...)

@@ -565,6 +565,7 @@ github.com/moby/buildkit/util/resolver/retryhandler
 github.com/moby/buildkit/util/sshutil
 github.com/moby/buildkit/util/stack
 github.com/moby/buildkit/util/system
+github.com/moby/buildkit/util/testutil
 github.com/moby/buildkit/util/testutil/dockerd
 github.com/moby/buildkit/util/testutil/integration
 github.com/moby/buildkit/util/tracing

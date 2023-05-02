@@ -429,6 +429,7 @@ func toSolveOpt(ctx context.Context, node builder.Node, multiDriver bool, opt Op
 		CacheExports:        cacheTo,
 		CacheImports:        cacheFrom,
 		AllowedEntitlements: opt.Allow,
+		SourcePolicy:        opt.SourcePolicy,
 	}
 
 	if opt.CgroupParent != "" {
@@ -473,13 +474,6 @@ func toSolveOpt(ctx context.Context, node builder.Node, multiDriver bool, opt Op
 		}
 		if !noProv {
 			so.FrontendAttrs["attest:provenance"] = "mode=min,inline-only=true"
-		}
-	}
-
-	if so.SourcePolicy == nil {
-		so.SourcePolicy, err = ReadSourcePolicy()
-		if err != nil {
-			return nil, nil, err
 		}
 	}
 

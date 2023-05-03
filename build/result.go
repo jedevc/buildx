@@ -72,7 +72,7 @@ func getResultAt(ctx context.Context, c *client.Client, solveOpt client.SolveOpt
 	resultCtxCh := make(chan *ResultContext)
 	errCh := make(chan error)
 	go func() {
-		_, err := c.Build(context.Background(), solveOpt, "buildx", func(ctx context.Context, c gateway.Client) (*gateway.Result, error) {
+		_, err := c.Build(context.Background(), client.SolveOpt{}, "buildx", func(ctx context.Context, c gateway.Client) (*gateway.Result, error) {
 			ctx, cancel := context.WithCancel(ctx)
 			defer cancel()
 			resultCtx := ResultContext{}
